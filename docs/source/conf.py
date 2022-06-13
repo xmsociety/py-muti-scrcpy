@@ -20,9 +20,9 @@ sys.path.insert(0, '../../../')
 
 # -- Project information -----------------------------------------------------
 
-project = 'Py Scrcpy'
-copyright = '2021, Lengyue'
-author = 'Lengyue'
+project = 'Py Mutl Scrcpy'
+copyright = '2021, Lengyue 2022, IanVzs'
+author = 'IanVzs'
 
 
 # -- General configuration ---------------------------------------------------
@@ -62,8 +62,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'alabaster'
 html_theme_options = {
     "show_powered_by": False,
-    "github_user": "leng-yue",
-    "github_repo": "py-scrcpy-client",
+    "github_user": "ianvzs",
+    "github_repo": "py-muti-scrcpy",
     "github_banner": True,
     "show_related": False,
     "note_bg": "#FFF59C",
