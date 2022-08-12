@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'screen.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.2.2
+## Created by: Qt User Interface Compiler version 6.3.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -53,12 +53,12 @@ from PySide6.QtWidgets import (
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
-            Dialog.setObjectName(u"Dialog")
+            Dialog.setObjectName("Dialog")
         Dialog.resize(386, 300)
         self.gridLayout = QGridLayout(Dialog)
-        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setObjectName("gridLayout")
         self.label_video = QLabel(Dialog)
-        self.label_video.setObjectName(u"label_video")
+        self.label_video.setObjectName("label_video")
 
         self.gridLayout.addWidget(self.label_video, 0, 0, 1, 1)
 
@@ -69,7 +69,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", "Dialog", None))
         self.label_video.setText("")
 
     # retranslateUi

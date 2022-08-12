@@ -11,7 +11,8 @@ from PySide6.QtCore import Signal
 
 from scrcpy import MutiClient
 
-from .schemas import ServerInfo
+from .schemas import RspInfo, ServerInfo
+from .utils import StructPack, imencode
 
 
 class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
@@ -26,25 +27,65 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         self.threadID = threadID
         self.stop_flag = False
         self.signal = signal
-        self.serverinfo = None
-        if serverinfo:
-            self.serverinfo = self.get_server(serverinfo)
+        self.serverinfo = serverinfo
         self.max_block_frame = 100
-        self.time_clean_block_list = 10  # s
+        self.time_add_block_list = 2  # s
         self.list_block_frame_time = []
+        self.serialno = serialno
         self.device = adb.device(serial=serialno)
         self.client = MutiClient(device=self.device, block_frame=False, max_width=640)
 
     def get_server(self, serverinfo: ServerInfo):
         serverinfo.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        serverinfo.server.setblocking(0)
         return serverinfo
 
-    def encode_content(self, data):
-        if isinstance(data, str):
-            return data.encode()
-        return
+    def http_send(self, img):
+        # TODO 在这里实现调用AI服务
+        bimg = imencode(img)
+        rst = None
+        return rst
+
+    def udp_split_send(self, img):
+        # TODO 在这里实现调用AI服务
+        bimg = imencode(img)
+        len_img = len(bimg)
+
+        len_fhead, fhead = StructPack.struct_pack(
+            len_data=len_img, serialno=self.serialno
+        )
+        if not len_fhead or self.serverinfo.server is None:
+            logger.error("udp send error: pack error")
+            return
+        self.serverinfo.server.sendto(
+            fhead, (self.serverinfo.host, self.serverinfo.port)
+        )
+
+        for i in range(len(bimg) // (1024 - len_fhead) + 1):
+            if (1024 - len_fhead) * (i + 1) > len_img:
+                segment = bimg[(1024 - len_fhead) * i :]
+                self.serverinfo.server.sendto(
+                    (fhead + segment),
+                    (self.serverinfo.host, self.serverinfo.port),
+                )
+            else:
+                segment = bimg[(1024 - len_fhead) * i : (1024 - len_fhead) * (i + 1)]
+                self.serverinfo.server.sendto(
+                    (fhead + segment),
+                    (self.serverinfo.host, self.serverinfo.port),
+                )
+        print(f"> send udp 2 {self.serverinfo.host}:{self.serverinfo.port}")
+
+    def get_udp_recv(self):
+        try:
+            resp = self.serverinfo.server.recv(100)
+            return RspInfo.decode(resp)
+        except BlockingIOError:
+            return None
 
     def run(self):
+        if self.serverinfo:
+            self.serverinfo = self.get_server(self.serverinfo)
         for frame in self.client.start():
             if self.stop_flag:
                 return
@@ -52,28 +93,27 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                 if self.signal:
                     self.signal.emit(frame)
                 else:
-                    self.serverinfo.server.sendto(
-                        self.encode_content("hello. Wakeup and goto work!"),
-                        (self.serverinfo.host, self.serverinfo.port),
-                    )
-                    print(f"> send udp 2 {self.serverinfo.host}:{self.serverinfo.port}")
-                    rst = self.serverinfo.server.recv(100)
-                    print(f"< recv udp recall !!!!! {rst}")
+                    self.udp_split_send(img=frame)
+                    rst = self.get_udp_recv()
+                    if rst:
+                        print(f"< recv{self.serialno} udp recall !!!!! {rst}")
+                    else:
+                        print("udp not reponse!")
             else:
                 now = time.time()
                 if not self.list_block_frame_time:
                     self.list_block_frame_time.append(now)
                 elif len(self.list_block_frame_time) >= self.max_block_frame:
-                    logger.warning(
+                    logger.debug(
                         f"max_block_frame out size: {self.list_block_frame_time}"
                     )
                     self.list_block_frame_time = []
-                elif now - self.list_block_frame_time[-1] >= self.time_clean_block_list:
-                    self.list_block_frame_time = []
                 elif (
                     now - self.list_block_frame_time[-1]
-                    < self.time_clean_block_list / 10
+                    >= self.time_add_block_list * 10
                 ):
+                    self.list_block_frame_time = []
+                elif now - self.list_block_frame_time[-1] > self.time_add_block_list:
                     self.list_block_frame_time.append(now)
 
     def stop(self):
