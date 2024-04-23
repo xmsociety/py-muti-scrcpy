@@ -14,9 +14,10 @@ format:
 	isort scrcpy tests scripts scrcpy_ui workers
 	black scrcpy tests scripts scrcpy_ui workers
 	flake8 --ignore W503,E203,E501,E731,F403,F401 scrcpy tests scripts scrcpy_ui --exclude scrcpy_ui/ui_main.py,scrcpy_ui/ui_single.py,scrcpy_ui/ui_screen.py,scrcpy_ui/ui_config_edit.py
-
+build:
+	python -m pip install --upgrade pip setuptools wheel
+	python -m pip install .
 run: # 运行
-	pip install .
 	py-muti-scrcpy
 
 ui: # 编译.ui 到 .py

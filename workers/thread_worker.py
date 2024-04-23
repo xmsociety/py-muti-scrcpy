@@ -33,7 +33,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         self.list_block_frame_time = []
         self.serialno = serialno
         self.device = adb.device(serial=serialno)
-        self.client = MutiClient(device=self.device, block_frame=False, max_width=640)
+        self.client = MutiClient(device=self.device, block_frame=False, max_width=720)
 
     def get_server(self, serverinfo: ServerInfo):
         serverinfo.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

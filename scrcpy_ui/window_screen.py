@@ -24,7 +24,7 @@ class ScreenWindow(QDialog):
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)  # 始终最前显示
         self.ui.setupUi(self)
 
-        self.max_width = 640
+        self.max_width = 720
         self.serial_no = serial_no
         # # show
         # self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)

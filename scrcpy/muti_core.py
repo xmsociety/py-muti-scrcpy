@@ -23,7 +23,7 @@ class Client:
         self,
         device: Optional[Union[AdbDevice, str, any]] = None,
         max_width: int = 0,
-        bitrate: int = 8000000,
+        bitrate: int = 16000000,
         max_fps: int = 0,
         block_frame: bool = False,
         stay_awake: bool = False,
