@@ -18,7 +18,8 @@ build:
 	python -m pip install --upgrade pip setuptools wheel
 	python -m pip install .
 run: # 运行
-	py-muti-scrcpy
+	python test.py 
+	# py-muti-scrcpy
 
 ui: # 编译.ui 到 .py
 	cd scrcpy_ui && pyside6-uic single.ui -o ui_single.py

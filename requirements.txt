@@ -1,7 +1,11 @@
 PySide6
-adbutils
+adbutils==0.11.0
 loguru
 pydantic
 flake8
 black
 isort
+opencv-python
+av
+setuptools
+wheel
