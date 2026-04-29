@@ -7,6 +7,10 @@ from adbutils import AdbError
 from scrcpy import Client
 from tests.utils import FakeStream
 
+DEVICE_NAME = b"test" + b"\x00" * 60
+EMPTY_DEVICE_NAME = b"\x00" * 64
+VIDEO_HEADER = b"h264" + b"\x00\x00\x07\x80" + b"\x00\x00\x04\x38"
+
 
 class FakeADBDevice:
     def __init__(self, data, wait=0):
@@ -31,7 +35,7 @@ class FakeADBDevice:
 
 def test_connection():
     client = Client(
-        device=FakeADBDevice([[b"\x00", b"test", b"\x07\x80\x04\x38"], []], wait=3)
+        device=FakeADBDevice([[b"\x00", DEVICE_NAME, VIDEO_HEADER], []], wait=3)
     )
     client.start(threaded=True)
     client.stop()
@@ -39,7 +43,7 @@ def test_connection():
     with pytest.raises(ConnectionError):
         client = Client(
             device=FakeADBDevice(
-                [[b"\x00", b"test", b"\x07\x80\x04\x38"], []], wait=1000
+                [[b"\x00", DEVICE_NAME, VIDEO_HEADER], []], wait=1000
             ),
             connection_timeout=1000,
         )
@@ -49,7 +53,7 @@ def test_connection():
     # No Dummy Bytes Error
     with pytest.raises(ConnectionError) as e:
         client = Client(
-            device=FakeADBDevice([[b"\x01", b"test", b"\x07\x80\x04\x38"], []])
+            device=FakeADBDevice([[b"\x01", DEVICE_NAME, VIDEO_HEADER], []])
         )
         client.start(threaded=True)
         client.stop()
@@ -57,7 +61,7 @@ def test_connection():
 
     # No Device Name Error
     with pytest.raises(ConnectionError) as e:
-        client = Client(device=FakeADBDevice([[b"\x00", b"", b"\x07\x80\x04\x38"], []]))
+        client = Client(device=FakeADBDevice([[b"\x00", EMPTY_DEVICE_NAME, VIDEO_HEADER], []]))
         client.start(threaded=True)
         client.stop()
     assert "Device Name" in str(e.value)
@@ -68,7 +72,7 @@ def test_init_listener():
         assert client.device_name == "test"
         client.stop()
 
-    client = Client(device=FakeADBDevice([[b"\x00", b"test", b"\x07\x80\x04\x38"], []]))
+    client = Client(device=FakeADBDevice([[b"\x00", DEVICE_NAME, VIDEO_HEADER], []]))
 
     client.add_listener("init", on_init)
     assert client.listeners["init"] == [on_init]
@@ -90,7 +94,7 @@ def test_parse_video():
         (pathlib.Path(__file__).parent / "test_video_data.pkl").resolve().open("rb")
     )
     data = [
-        [b"\x00", b"test", b"\x07\x80\x04\x38", None] + video_data + [b"OSError"],
+        [b"\x00", DEVICE_NAME, VIDEO_HEADER, None] + video_data + [b"OSError"],
         [],
     ]
     frames = []

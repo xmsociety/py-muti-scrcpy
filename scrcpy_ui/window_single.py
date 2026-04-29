@@ -140,6 +140,7 @@ class MainWindow(QMainWindow):
     def on_frame(self, frame):
         app.processEvents()
         if frame is not None:
+            frame = np.ascontiguousarray(frame)
             ratio = self.max_width / max(self.client.resolution)
             image = QImage(
                 frame,

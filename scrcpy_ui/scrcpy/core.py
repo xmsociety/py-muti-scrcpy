@@ -10,11 +10,13 @@ from typing import Any, Callable, Optional, Tuple, Union
 import av
 import cv2
 import numpy as np
-from adbutils import AdbDevice, AdbError, Network, _AdbStreamConnection, adb
+from adbutils import AdbDevice, AdbError, Network, adb
 from av.codec import CodecContext
 
 from .const import EVENT_FRAME, EVENT_INIT, LOCK_SCREEN_ORIENTATION_UNLOCKED
 from .control import ControlSender
+
+SCRCPY_SERVER_VERSION = "3.3.4"
 
 
 class Client:
@@ -71,10 +73,20 @@ class Client:
 
         # Need to destroy
         self.alive = False
-        self.__server_stream: Optional[_AdbStreamConnection] = None
+        self.__server_stream: Optional[Any] = None
         self.__video_socket: Optional[socket.socket] = None
         self.control_socket: Optional[socket.socket] = None
         self.control_socket_lock = threading.Lock()
+
+    @staticmethod
+    def __recv_exact(sock: socket.socket, length: int) -> bytes:
+        data = bytearray()
+        while len(data) < length:
+            chunk = sock.recv(length - len(data))
+            if not chunk:
+                raise ConnectionError("Socket closed while reading scrcpy metadata")
+            data.extend(chunk)
+        return bytes(data)
 
     def __init_server_connection(self) -> None:
         """
@@ -100,12 +112,13 @@ class Client:
         self.control_socket = self.device.create_connection(
             Network.LOCAL_ABSTRACT, "scrcpy"
         )
-        self.device_name = self.__video_socket.recv(64).decode("utf-8").rstrip("\x00")
+        self.device_name = self.__recv_exact(self.__video_socket, 64).decode("utf-8").rstrip("\x00")
         if not len(self.device_name):
             raise ConnectionError("Did not receive Device Name!")
 
-        res = self.__video_socket.recv(4)
-        self.resolution = struct.unpack(">HH", res)
+        # scrcpy v3 sends codec id + video width + video height before raw H.264 data.
+        _, width, height = struct.unpack(">III", self.__recv_exact(self.__video_socket, 12))
+        self.resolution = (width, height)
         self.__video_socket.setblocking(False)
 
     def __deploy_server(self) -> None:
@@ -115,33 +128,61 @@ class Client:
         server_root = os.path.abspath(os.path.dirname(__file__))
         server_file_path = server_root + "/scrcpy-server.jar"
         self.device.push(server_file_path, "/data/local/tmp/")
-        self.__server_stream: _AdbStreamConnection = self.device.shell(
+        self.__server_stream = self.device.shell(
             [
                 "CLASSPATH=/data/local/tmp/scrcpy-server.jar",
                 "app_process",
                 "/",
                 "com.genymobile.scrcpy.Server",
-                "1.20",  # Scrcpy server version
-                "info",  # Log level: info, verbose...
-                f"{self.max_width}",  # Max screen width (long side)
-                f"{self.bitrate}",  # Bitrate of video
-                f"{self.max_fps}",  # Max frame per second
-                f"{self.lock_screen_orientation}",  # Lock screen orientation: LOCK_SCREEN_ORIENTATION
-                "true",  # Tunnel forward
-                "-",  # Crop screen
-                "false",  # Send frame rate to client
-                "true",  # Control enabled
-                "0",  # Display id
-                "false",  # Show touches
-                "true" if self.stay_awake else "false",  # Stay awake
-                "-",  # Codec (video encoding) options
-                "-",  # Encoder name
-                "false",  # Power off screen after server closed
+                SCRCPY_SERVER_VERSION,
+                "log_level=info",
+                "video=true",
+                "audio=false",
+                "video_codec=h264",
+                f"max_size={self.max_width}",
+                f"video_bit_rate={self.bitrate}",
+                f"max_fps={self.max_fps}",
+                "tunnel_forward=true",
+                "control=true",
+                "display_id=0",
+                "show_touches=false",
+                f"stay_awake={'true' if self.stay_awake else 'false'}",
+                "power_off_on_close=false",
+                "clipboard_autosync=false",
+                "downsize_on_error=true",
+                "cleanup=true",
+                "power_on=true",
+                "send_device_meta=true",
+                "send_frame_meta=false",
+                "send_dummy_byte=true",
+                "send_codec_meta=true",
             ],
             stream=True,
         )
         # Wait for server to start
         self.__server_stream.read(10)
+
+    def __read_server_output(self) -> str:
+        if self.__server_stream is None:
+            return ""
+
+        conn = getattr(self.__server_stream, "conn", None)
+        old_timeout = None
+        if conn is not None and hasattr(conn, "gettimeout"):
+            old_timeout = conn.gettimeout()
+            conn.settimeout(0.2)
+
+        try:
+            output = self.__server_stream.read(4096)
+        except Exception:
+            return ""
+        finally:
+            if conn is not None and old_timeout is not None:
+                conn.settimeout(old_timeout)
+
+        if isinstance(output, bytes):
+            return output.decode("utf-8", errors="replace")
+        return str(output)
 
     def start(self, threaded: bool = False) -> None:
         """
@@ -182,6 +223,13 @@ class Client:
         while self.alive:
             try:
                 raw_h264 = self.__video_socket.recv(0x10000)
+                if not raw_h264:
+                    self.alive = False
+                    server_output = self.__read_server_output()
+                    message = "Video socket closed; scrcpy-server may have crashed"
+                    if server_output:
+                        message = f"{message}\n{server_output}"
+                    raise ConnectionError(message)
                 packets = codec.parse(raw_h264)
                 for packet in packets:
                     frames = codec.decode(packet)

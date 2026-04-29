@@ -132,18 +132,6 @@ class MainWindow(QMainWindow):
                     )
         except Exception as e:
             logger.error(f"获取设备列表失败: {e}")
-        
-        # 添加测试设备（可以配置化）
-        data.append(
-            [
-                self.check_box_widget,
-                "常驻测试",
-                "fake_device",
-                "pvp",
-                self.operate_button_widget,  # 修复：使用widget而不是字符串
-                self.others_buttons_widget,
-            ]
-        )
         return data
 
     # region widgets数据缓存
@@ -156,6 +144,8 @@ class MainWindow(QMainWindow):
         """
         统一管理按钮状态的方法
         """
+        if row == -1:
+            return
         row_data = self.dict_table_buttons.get(row)
         if not row_data or name not in row_data:
             logger.warning(f"按钮 {name} 在第 {row} 行不存在")
@@ -417,11 +407,13 @@ class MainWindow(QMainWindow):
     #     pass
 
     def close_all_about_edit_show(self, row, serial_no):
-        del self.dict_window_edit[serial_no]
+        self.dict_window_edit.pop(serial_no, None)
+        row = self._find_row_by_serial(serial_no)
         self.chg_button2table_dict(row, "edit", -1)
 
     def close_all_about_show(self, row, serial_no):
-        del self.dict_window_screen[serial_no]
+        self.dict_window_screen.pop(serial_no, None)
+        row = self._find_row_by_serial(serial_no)
         self.chg_button2table_dict(row, "show", -1)
 
     def on_click_show(self):
@@ -519,18 +511,19 @@ class MainWindow(QMainWindow):
 
     def update_table_data(self, data: list, remove_serialno: list = None):
         logger.info(f"数据刷新: {data}\n \t\t{remove_serialno}")
-        self.dict_table_buttons = {}
-        self.dict_table_box = {"check": {}, "combo": {}}
-        for _rm_no in remove_serialno or []:  # 添加默认值
-            logger.info(
-                f"self.ui.table_devices.rowCount(): {self.ui.table_devices.rowCount()}\n self.ui.table_devices.item(row_num, self.SerialColNum): {self.ui.table_devices.item(0, self.SerialColNum).text()}"
-            )
-            for row_num in range(self.ui.table_devices.rowCount()):
-                if (
-                    self.ui.table_devices.item(row_num, self.SerialColNum).text()
-                    in remove_serialno
-                ):
-                    logger.warning(f"will remove row: {row_num}, no: {_rm_no}")
+        remove_serialno = set(remove_serialno or [])
+        if remove_serialno:
+            for row_num in range(self.ui.table_devices.rowCount() - 1, -1, -1):
+                item = self.ui.table_devices.item(row_num, self.SerialColNum)
+                if item and item.text() in remove_serialno:
+                    serial_no = item.text()
+                    logger.warning(f"will remove row: {row_num}, no: {serial_no}")
+                    screen_window = self.dict_window_screen.pop(serial_no, None)
+                    if screen_window:
+                        screen_window.close()
+                    edit_window = self.dict_window_edit.pop(serial_no, None)
+                    if edit_window:
+                        edit_window.close()
                     self.ui.table_devices.removeRow(row_num)
 
         for item in data:
@@ -543,6 +536,50 @@ class MainWindow(QMainWindow):
                 else:
                     v = QTableWidgetItem(v)
                     self.ui.table_devices.setItem(row, j, v)
+        self._rebuild_table_widget_cache()
+        self._sync_window_button_states()
+
+    def _rebuild_table_widget_cache(self):
+        """根据当前表格内容重建行号到控件的缓存。"""
+        self.dict_table_buttons = {}
+        self.dict_table_box = {"check": {}, "combo": {}}
+        for row in range(self.ui.table_devices.rowCount()):
+            checkbox = self.ui.table_devices.cellWidget(row, 0)
+            if isinstance(checkbox, QCheckBox):
+                self.add_box2table_dict(row, "check", checkbox)
+
+            combo = self.ui.table_devices.cellWidget(row, 3)
+            if isinstance(combo, QComboBox):
+                self.add_box2table_dict(row, "combo", combo)
+
+            operate_button = self.ui.table_devices.cellWidget(row, 4)
+            if isinstance(operate_button, QPushButton):
+                self.add_button2table_dict(row, {"operate": operate_button})
+
+            others_widget = self.ui.table_devices.cellWidget(row, 5)
+            if others_widget:
+                row_buttons = {}
+                for button in others_widget.findChildren(QPushButton):
+                    if button.text() in self.dict_ui_text["buttons"]["edit"].values():
+                        row_buttons["edit"] = button
+                    elif button.text() in self.dict_ui_text["buttons"]["show"].values():
+                        row_buttons["show"] = button
+                if row_buttons:
+                    self.add_button2table_dict(row, row_buttons)
+
+    def _sync_window_button_states(self):
+        """设备列表刷新后，按窗口实际打开状态同步按钮文本和样式。"""
+        for serial_no in list(self.dict_window_screen.keys()):
+            row = self._find_row_by_serial(serial_no)
+            if row == -1:
+                continue
+            self.chg_button2table_dict(row, "show", 1)
+
+        for serial_no in list(self.dict_window_edit.keys()):
+            row = self._find_row_by_serial(serial_no)
+            if row == -1:
+                continue
+            self.chg_button2table_dict(row, "edit", 1)
     
     def _start_process_monitoring(self):
         """启动进程状态监控"""

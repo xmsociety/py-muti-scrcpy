@@ -1,5 +1,5 @@
 PySide6
-adbutils==0.11.0
+adbutils
 loguru
 pydantic
 flake8

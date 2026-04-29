@@ -44,6 +44,7 @@ class ScreenWindow(QDialog):
         # app.processEvents()
         # print("frame~~~~")
         if frame is not None:
+            frame = np.ascontiguousarray(frame)
             # ratio = self.max_width / max(self.client.resolution)
             image = QImage(
                 frame,
@@ -59,11 +60,14 @@ class ScreenWindow(QDialog):
 
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
+            client = self.tworker.client
+            if not client.alive or client.control_socket is None or client.resolution is None:
+                return
             focused_widget = QApplication.focusWidget()
             if focused_widget is not None:
                 focused_widget.clearFocus()
-            ratio = self.max_width / max(self.tworker.client.resolution)
-            self.tworker.client.control.touch(
+            ratio = self.max_width / max(client.resolution)
+            client.control.touch(
                 evt.position().x() - (self.ui.label_video.geometry().x() / 2) / ratio,
                 evt.position().y() - (self.ui.label_video.geometry().y() / 2) / ratio,
                 action,

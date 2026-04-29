@@ -19,9 +19,14 @@ def inject(control_type: int):
         @functools.wraps(f)
         def inner(*args, **kwargs):
             package = struct.pack(">B", control_type) + f(*args, **kwargs)
-            if args[0].parent.control_socket is not None:
-                with args[0].parent.control_socket_lock:
-                    args[0].parent.control_socket.send(package)
+            parent = args[0].parent
+            if parent.control_socket is not None:
+                try:
+                    with parent.control_socket_lock:
+                        parent.control_socket.send(package)
+                except OSError:
+                    parent.alive = False
+                    parent.control_socket = None
             return package
 
         return inner
@@ -73,8 +78,9 @@ class ControlSender:
             touch_id: Default using virtual id -1, you can specify it to emulate multi finger touch
         """
         x, y = max(x, 0), max(y, 0)
+        action_button = 1 if action in (const.ACTION_DOWN, const.ACTION_UP) else 0
         return struct.pack(
-            ">BqiiHHHi",
+            ">BqiiHHHii",
             action,
             touch_id,
             int(x),
@@ -82,6 +88,7 @@ class ControlSender:
             int(self.parent.resolution[0]),
             int(self.parent.resolution[1]),
             0xFFFF,
+            action_button,
             1,
         )
 
@@ -99,13 +106,14 @@ class ControlSender:
 
         x, y = max(x, 0), max(y, 0)
         return struct.pack(
-            ">iiHHii",
+            ">iiHHhhi",
             int(x),
             int(y),
             int(self.parent.resolution[0]),
             int(self.parent.resolution[1]),
             int(h),
             int(v),
+            1,
         )
 
     @inject(const.TYPE_BACK_OR_SCREEN_ON)
@@ -157,7 +165,7 @@ class ControlSender:
             s.setblocking(True)
 
             # Read package
-            package = struct.pack(">B", const.TYPE_GET_CLIPBOARD)
+            package = struct.pack(">BB", const.TYPE_GET_CLIPBOARD, 0)
             s.send(package)
             (code,) = struct.unpack(">B", s.recv(1))
             assert code == 0
@@ -175,7 +183,7 @@ class ControlSender:
             paste: paste now
         """
         buffer = text.encode("utf-8")
-        return struct.pack(">?i", paste, len(buffer)) + buffer
+        return struct.pack(">Q?i", 0, paste, len(buffer)) + buffer
 
     @inject(const.TYPE_SET_SCREEN_POWER_MODE)
     def set_screen_power_mode(self, mode: int = scrcpy.POWER_MODE_NORMAL) -> bytes:
@@ -185,7 +193,7 @@ class ControlSender:
         Args:
             mode: POWER_MODE_OFF | POWER_MODE_NORMAL
         """
-        return struct.pack(">b", mode)
+        return struct.pack(">?", mode != scrcpy.POWER_MODE_OFF)
 
     @inject(const.TYPE_ROTATE_DEVICE)
     def rotate_device(self) -> bytes:
