@@ -1,35 +1,20 @@
 import json
 from socket import socket
+from typing import Optional
 
-import cv2
 import numpy as np
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-try:
-    from .utils import imdecode, imencode
-except:
-
-    def imencode(img) -> bytes:
-        ext = ".png"
-        sign, uint8img = cv2.imencode(ext=ext, img=img)
-        return uint8img.tobytes() if sign else b""
-
-    def imdecode(buint8img) -> np.ndarray:
-        uint8img = np.frombuffer(buint8img, np.uint8)
-        return cv2.imdecode(uint8img, cv2.IMREAD_COLOR)
-
-
-# from typing import Dict, List, Optional
+from .utils import imdecode, imencode
 
 
 class ServerInfo(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     host: str
     port: int
-    server: socket = None
-
-    class Config:
-        arbitrary_types_allowed = True
+    server: Optional[socket] = None
 
 
 class ReqInfoSmallImg(BaseModel):
@@ -37,12 +22,11 @@ class ReqInfoSmallImg(BaseModel):
     tips: 小于1024的可以直接发送,一般需要分包发送
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     utime: int
     img: np.ndarray
     split_by: bytes = b"utime_img"
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def encode(self):
         endata = b""
@@ -67,12 +51,11 @@ class ReqInfoSmallImg(BaseModel):
 
 
 class RspInfo(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     utime: int
     rst: dict
     split_by: bytes = b"utime_rst"
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def encode(self) -> bytes:
         endata = b""

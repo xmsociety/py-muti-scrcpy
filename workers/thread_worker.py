@@ -24,6 +24,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         serverinfo 将手机画面传输到服务端处理
         """
         threading.Thread.__init__(self)
+        self.daemon = True
         self.threadID = threadID
         self.stop_flag = False
         self.signal = signal
@@ -127,6 +128,11 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
     def stop(self):
         self.stop_flag = True
         if self.serverinfo:
+            if self.serverinfo.server:
+                try:
+                    self.serverinfo.server.close()
+                except OSError:
+                    pass
             self.serverinfo.server = None
         self.client.stop()
 

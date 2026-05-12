@@ -16,7 +16,7 @@ pip install muti-scrcpy-client
 pip install "muti-scrcpy-client[ui]"
 ```
 
-项目支持的 Python 版本范围由 `pyproject.toml` 定义：`>=3.7, <=3.12.3`。
+项目支持的 Python 版本范围由 `pyproject.toml` 定义：`>=3.10, <3.15`。
 
 ## ADB 连接
 
@@ -148,12 +148,14 @@ client.device_name
 
 ## 多设备客户端
 
-`scrcpy.MutiClient` 是面向逐帧消费场景的客户端。它与基础 `Client` 使用同一套 scrcpy 服务端和控制能力，但 `start()` 返回一个生成器，适合在 worker 中循环拉取帧。
+`scrcpy.MultiClient` 是面向逐帧消费场景的客户端。它与基础 `Client` 使用同一套 scrcpy 服务端和控制能力，但 `start()` 返回一个生成器，适合在 worker 中循环拉取帧。
+
+> 由于 PyPI 包名 `muti-scrcpy-client` 是历史遗留拼写，该类的旧名 `MutiClient` 仍作为别名保留；新代码请用 `MultiClient`。
 
 ```python
 import scrcpy
 
-client = scrcpy.MutiClient(device="DEVICE_SERIAL")
+client = scrcpy.MultiClient(device="DEVICE_SERIAL")
 
 for frame in client.start():
     if frame is None:
@@ -164,8 +166,8 @@ for frame in client.start():
 需要注意：
 
 - `Client.start(threaded=True)` 是基础客户端的事件循环用法。
-- `MutiClient.start()` 是生成器用法，不接收 `threaded` 参数。
-- `MutiClient` 默认码率为 `16000000`，适合更高画质的逐帧处理。
+- `MultiClient.start()` 是生成器用法，不接收 `threaded` 参数。
+- `MultiClient` 默认码率为 `16000000`，适合更高画质的逐帧处理。
 
 ## 桌面界面
 

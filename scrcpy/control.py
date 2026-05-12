@@ -38,6 +38,21 @@ class ControlSender:
     def __init__(self, parent):
         self.parent = parent
 
+    @staticmethod
+    def _recv_exact(sock: socket.socket, length: int) -> bytes:
+        data = bytearray()
+        while len(data) < length:
+            chunk = sock.recv(length - len(data))
+            if not chunk:
+                raise ConnectionError("Control socket closed while reading response")
+            data.extend(chunk)
+        return bytes(data)
+
+    def _require_resolution(self):
+        if self.parent.resolution is None:
+            raise RuntimeError("Device resolution is not ready; wait until client init")
+        return self.parent.resolution
+
     @inject(const.TYPE_INJECT_KEYCODE)
     def keycode(
         self, keycode: int, action: int = const.ACTION_DOWN, repeat: int = 0
@@ -79,14 +94,15 @@ class ControlSender:
         """
         x, y = max(x, 0), max(y, 0)
         action_button = 1 if action in (const.ACTION_DOWN, const.ACTION_UP) else 0
+        resolution = self._require_resolution()
         return struct.pack(
             ">BqiiHHHii",
             action,
             touch_id,
             int(x),
             int(y),
-            int(self.parent.resolution[0]),
-            int(self.parent.resolution[1]),
+            int(resolution[0]),
+            int(resolution[1]),
             0xFFFF,
             action_button,
             1,
@@ -105,12 +121,13 @@ class ControlSender:
         """
 
         x, y = max(x, 0), max(y, 0)
+        resolution = self._require_resolution()
         return struct.pack(
             ">iiHHhhi",
             int(x),
             int(y),
-            int(self.parent.resolution[0]),
-            int(self.parent.resolution[1]),
+            int(resolution[0]),
+            int(resolution[1]),
             int(h),
             int(v),
             1,
@@ -153,11 +170,13 @@ class ControlSender:
         """
         # Since this function need socket response, we can't auto inject it any more
         s: socket.socket = self.parent.control_socket
+        if s is None:
+            raise ConnectionError("Control socket is not connected")
 
         with self.parent.control_socket_lock:
             # Flush socket
             s.setblocking(False)
-            while True:
+            for _ in range(16):
                 try:
                     s.recv(1024)
                 except BlockingIOError:
@@ -167,11 +186,12 @@ class ControlSender:
             # Read package
             package = struct.pack(">BB", const.TYPE_GET_CLIPBOARD, 0)
             s.send(package)
-            (code,) = struct.unpack(">B", s.recv(1))
-            assert code == 0
-            (length,) = struct.unpack(">i", s.recv(4))
+            (code,) = struct.unpack(">B", self._recv_exact(s, 1))
+            if code != 0:
+                raise RuntimeError(f"Unexpected clipboard response code: {code}")
+            (length,) = struct.unpack(">i", self._recv_exact(s, 4))
 
-            return s.recv(length).decode("utf-8")
+            return self._recv_exact(s, length).decode("utf-8")
 
     @inject(const.TYPE_SET_CLIPBOARD)
     def set_clipboard(self, text: str, paste: bool = False) -> bytes:
@@ -228,11 +248,12 @@ class ControlSender:
         next_x = start_x
         next_y = start_y
 
-        if end_x > self.parent.resolution[0]:
-            end_x = self.parent.resolution[0]
+        resolution = self._require_resolution()
+        if end_x > resolution[0]:
+            end_x = resolution[0]
 
-        if end_y > self.parent.resolution[1]:
-            end_y = self.parent.resolution[1]
+        if end_y > resolution[1]:
+            end_y = resolution[1]
 
         decrease_x = True if start_x > end_x else False
         decrease_y = True if start_y > end_y else False

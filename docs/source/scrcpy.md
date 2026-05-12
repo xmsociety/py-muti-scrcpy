@@ -4,7 +4,7 @@
 
 ## 模块总览
 
-`scrcpy` 包导出基础客户端 `Client`、生成器式多设备客户端 `MutiClient`，以及事件名、按键码、触摸动作、屏幕方向锁定等常量。
+`scrcpy` 包导出基础客户端 `Client`、生成器式多设备客户端 `MultiClient`（旧名 `MutiClient` 作为别名保留），以及事件名、按键码、触摸动作、屏幕方向锁定等常量。
 
 ```{eval-rst}
 .. automodule:: scrcpy
@@ -28,7 +28,7 @@
 
 ### `scrcpy.muti_core` 模块
 
-`scrcpy.muti_core` 提供 `MutiClient` 的实现。该客户端更适合 worker 场景：调用 `start()` 后可以逐帧 `yield` 画面，便于在循环中处理多设备图像。
+`scrcpy.muti_core` 提供 `MultiClient`（顶层别名为 `scrcpy.MultiClient`，旧名 `MutiClient` 仍可用）。该客户端更适合 worker 场景：调用 `start()` 后可以逐帧 `yield` 画面，便于在循环中处理多设备图像。
 
 ```{eval-rst}
 .. automodule:: scrcpy.muti_core

@@ -30,16 +30,22 @@ class UDPServer:
         self.server.sendto(resp.encode(), addr)
 
     def run(self, host: str, port: int):
-        while 1:
+        while True:
             try:
                 self.server.bind((host, port))
-            except:
-                print("ohhhhhhhhhhhhhhhhhhhhhh!")
+            except OSError as err:
+                logger.error(f"UDP bind {host}:{port} 失败，10s 后重试: {err}")
                 time.sleep(10)
-            dict_imgs = {}
-            while 1:
-                recvinfo = self.server.recvfrom(1024)
-                bdata, addr = recvinfo
+                continue
+
+            dict_imgs: dict[str, dict] = {}
+            while True:
+                try:
+                    bdata, addr = self.server.recvfrom(1024)
+                except OSError as err:
+                    logger.warning(f"UDP recvfrom 异常，重启监听: {err}")
+                    break
+
                 unpack_data = StructPack.struct_unpack(bdata)
                 data_size = unpack_data[0]
                 seriano = unpack_data[1]
@@ -47,8 +53,12 @@ class UDPServer:
                 if len(bdata) == StructPack.HeadLenth:
                     logger.debug(f"get new img, size: {data_size}")
                     dict_imgs[seriano] = {"len": data_size, "bimg": b""}
-                elif seriano in [i for i in dict_imgs.keys()]:
-                    dict_imgs[seriano]["bimg"] += bdata[StructPack.HeadLenth :]
+                elif seriano in dict_imgs:
+                    dict_imgs[seriano]["bimg"] += bdata[StructPack.HeadLenth:]
                     if len(dict_imgs[seriano]["bimg"]) == dict_imgs[seriano]["len"]:
                         self.do_some_things(addr, seriano, dict_imgs[seriano]["bimg"])
                         del dict_imgs[seriano]
+
+
+def run_udp_server(host: str, port: int):
+    UDPServer().run(host, port)

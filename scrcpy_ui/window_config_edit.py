@@ -22,12 +22,15 @@ class ConfigEditWindow(QDialog):
         super().__init__(*args, **kwargs)
         if not serial_no:
             return
+        self._close_notified = False
         self.row = row
         self.name = name
         self.serial_no = serial_no
         self.signal_config_edit_close = signal_config_edit_close
         self.ui = Ui_Dialog()
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)  # 始终最前显示
+        # 关闭即销毁；MainWindow 通过 destroyed 信号兜底清理 dict_window_edit。
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.ui.setupUi(self)
 
         # event bind
@@ -104,14 +107,21 @@ class ConfigEditWindow(QDialog):
             with open(path, "w") as f:
                 json.dump(data, f)
             self.ignore_flag = False
-            self.signal_config_edit_close.emit(self.row, self.serial_no)
+            self._notify_close()
             return QDialog.accept(self)
 
     def reject(self):
         print("I'm cencel!!!!!")
-        self.signal_config_edit_close.emit(self.row, self.serial_no)
+        self._notify_close()
         QDialog.reject(self)
 
     def closeEvent(self, _):
         print("close~~~~edit~~~~~")
-        self.signal_config_edit_close.emit(self.row, self.serial_no)
+        self._notify_close()
+
+    def _notify_close(self):
+        if self._close_notified:
+            return
+        self._close_notified = True
+        if self.signal_config_edit_close:
+            self.signal_config_edit_close.emit(self.row, self.serial_no)
