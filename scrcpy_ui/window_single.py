@@ -2,15 +2,15 @@ from typing import Optional
 
 import click
 import cv2
+import numpy as np
 from adbutils import adb
 from PySide6.QtGui import QImage, QKeyEvent, QMouseEvent, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import scrcpy
 
+from .qt_keymap import qt_keycode_to_android
 from .ui_main import Ui_MainWindow
-
-app = QApplication([])
 
 
 class MainWindow(QMainWindow):
@@ -96,50 +96,21 @@ class MainWindow(QMainWindow):
 
     def on_key_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QKeyEvent):
-            code = self.map_code(evt.key())
+            code = qt_keycode_to_android(evt.key())
             if code != -1:
                 self.client.control.keycode(code, action)
 
         return handler
 
-    def map_code(self, code):
-        """
-        Map qt keycode ti android keycode
-
-        Args:
-            code: qt keycode
-            android keycode, -1 if not founded
-        """
-
-        if code == -1:
-            return -1
-        if 48 <= code <= 57:
-            return code - 48 + 7
-        if 65 <= code <= 90:
-            return code - 65 + 29
-        if 97 <= code <= 122:
-            return code - 97 + 29
-
-        hard_code = {
-            32: scrcpy.KEYCODE_SPACE,
-            16777219: scrcpy.KEYCODE_DEL,
-            16777248: scrcpy.KEYCODE_SHIFT_LEFT,
-            16777220: scrcpy.KEYCODE_ENTER,
-            16777217: scrcpy.KEYCODE_TAB,
-            16777249: scrcpy.KEYCODE_CTRL_LEFT,
-        }
-        if code in hard_code:
-            return hard_code[code]
-
-        print(f"Unknown keycode: {code}")
-        return -1
-
     def on_init(self):
         self.setWindowTitle(f"Serial: {self.client.device_name}")
 
     def on_frame(self, frame):
-        app.processEvents()
+        app = QApplication.instance()
+        if app:
+            app.processEvents()
         if frame is not None:
+            frame = np.ascontiguousarray(frame)
             ratio = self.max_width / max(self.client.resolution)
             image = QImage(
                 frame,
@@ -148,7 +119,7 @@ class MainWindow(QMainWindow):
                 frame.shape[1] * 3,
                 QImage.Format_BGR888,
             )
-            pix = QPixmap(image)
+            pix = QPixmap(image.copy())
             pix.setDevicePixelRatio(1 / ratio)
             self.ui.label.setPixmap(pix)
             self.resize(1, 1)
@@ -170,6 +141,8 @@ class MainWindow(QMainWindow):
     help="Select device manually (device serial required)",
 )
 def main(max_width: int, device: Optional[str]):
+    # 持有 QApplication 引用以避免被 GC，否则 Qt 控件会立刻销毁
+    app = QApplication.instance() or QApplication([])  # noqa: F841
     m = MainWindow(max_width, device)
     m.show()
 

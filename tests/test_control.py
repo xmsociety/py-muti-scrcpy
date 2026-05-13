@@ -39,7 +39,8 @@ def test_control_touch():
         + b"\x00\x00\x00\xc8"  # Y: 200
         + b"\x07\x80\x04\x38"  # Resolution: (1920, 1080)
         + b"\xff\xff"  # Pressure: 100%
-        + b"\x00\x00\x00\x01"  # Primary button
+        + b"\x00\x00\x00\x01"  # Action button
+        + b"\x00\x00\x00\x01"  # Pressed buttons
     )
 
 
@@ -58,8 +59,9 @@ def test_control_scroll():
         + b"\x00\x00\x00\x64"  # X: 100
         + b"\x00\x00\x00\xc8"  # Y: 200
         + b"\x07\x80\x04\x38"  # Resolution: (1920, 1080)
-        + b"\x00\x00\x00\x64"  # H: 100
-        + b"\x00\x00\x00\xc8"  # V: 200
+        + b"\x00\x64"  # H: 100
+        + b"\x00\xc8"  # V: 200
+        + b"\x00\x00\x00\x01"  # Pressed buttons
     )
 
 
@@ -106,12 +108,14 @@ def test_set_clipboard():
     text = "hello, world"
     assert control.set_clipboard(text, False) == (
         b"\x09"  # TYPE_SET_CLIPBOARD
+        + b"\x00\x00\x00\x00\x00\x00\x00\x00"  # Sequence
         + b"\x00"  # Paste: false
         + b"\x00\x00\x00\x0c"  # Length: 12
         + text.encode("utf-8")
     )
     assert control.set_clipboard(text, True) == (
         b"\x09"  # TYPE_SET_CLIPBOARD
+        + b"\x00\x00\x00\x00\x00\x00\x00\x00"  # Sequence
         + b"\x01"  # Paste: true
         + b"\x00\x00\x00\x0c"  # Length: 12
         + text.encode("utf-8")
@@ -120,7 +124,7 @@ def test_set_clipboard():
 
 def test_set_screen_power_mode():
     assert control.set_screen_power_mode(scrcpy.POWER_MODE_NORMAL) == (
-        b"\x0a" + b"\x02"  # TYPE_SET_SCREEN_POWER_MODE, POWER_MODE_NORMAL
+        b"\x0a" + b"\x01"  # TYPE_SET_SCREEN_POWER_MODE, on
     )
 
 

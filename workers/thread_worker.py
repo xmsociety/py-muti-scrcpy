@@ -24,6 +24,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         serverinfo 将手机画面传输到服务端处理
         """
         threading.Thread.__init__(self)
+        self.daemon = True
         self.threadID = threadID
         self.stop_flag = False
         self.signal = signal
@@ -33,7 +34,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
         self.list_block_frame_time = []
         self.serialno = serialno
         self.device = adb.device(serial=serialno)
-        self.client = MutiClient(device=self.device, block_frame=False, max_width=640)
+        self.client = MutiClient(device=self.device, block_frame=False, max_width=720)
 
     def get_server(self, serverinfo: ServerInfo):
         serverinfo.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -42,7 +43,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
 
     def http_send(self, img):
         # TODO 在这里实现调用AI服务
-        bimg = imencode(img)
+        bimg = imencode(img)  # noqa: F841
         rst = None
         return rst
 
@@ -84,42 +85,58 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
             return None
 
     def run(self):
-        if self.serverinfo:
-            self.serverinfo = self.get_server(self.serverinfo)
-        for frame in self.client.start():
-            if self.stop_flag:
-                return
-            if isinstance(frame, np.ndarray):
-                if self.signal:
-                    self.signal.emit(frame)
-                else:
-                    self.udp_split_send(img=frame)
-                    rst = self.get_udp_recv()
-                    if rst:
-                        print(f"< recv{self.serialno} udp recall !!!!! {rst}")
+        try:
+            if self.serverinfo:
+                self.serverinfo = self.get_server(self.serverinfo)
+            for frame in self.client.start():
+                if self.stop_flag:
+                    return
+                if isinstance(frame, np.ndarray):
+                    if self.signal:
+                        self.signal.emit(frame)
                     else:
-                        print("udp not reponse!")
+                        self.udp_split_send(img=frame)
+                        rst = self.get_udp_recv()
+                        if rst:
+                            print(f"< recv{self.serialno} udp recall !!!!! {rst}")
+                        else:
+                            print("udp not reponse!")
+                else:
+                    now = time.time()
+                    if not self.list_block_frame_time:
+                        self.list_block_frame_time.append(now)
+                    elif len(self.list_block_frame_time) >= self.max_block_frame:
+                        logger.debug(
+                            f"max_block_frame out size: {self.list_block_frame_time}"
+                        )
+                        self.list_block_frame_time = []
+                    elif (
+                        now - self.list_block_frame_time[-1]
+                        >= self.time_add_block_list * 10
+                    ):
+                        self.list_block_frame_time = []
+                    elif (
+                        now - self.list_block_frame_time[-1] > self.time_add_block_list
+                    ):
+                        self.list_block_frame_time.append(now)
+        except Exception as e:
+            if self.stop_flag:
+                logger.debug(f"设备 {self.serialno} 取流线程已停止: {e}")
             else:
-                now = time.time()
-                if not self.list_block_frame_time:
-                    self.list_block_frame_time.append(now)
-                elif len(self.list_block_frame_time) >= self.max_block_frame:
-                    logger.debug(
-                        f"max_block_frame out size: {self.list_block_frame_time}"
-                    )
-                    self.list_block_frame_time = []
-                elif (
-                    now - self.list_block_frame_time[-1]
-                    >= self.time_add_block_list * 10
-                ):
-                    self.list_block_frame_time = []
-                elif now - self.list_block_frame_time[-1] > self.time_add_block_list:
-                    self.list_block_frame_time.append(now)
+                logger.exception(f"设备 {self.serialno} 取流线程异常退出")
+        finally:
+            self.client.stop()
 
     def stop(self):
-        if self.serverinfo:
-            self.serverinfo.server = None
         self.stop_flag = True
+        if self.serverinfo:
+            if self.serverinfo.server:
+                try:
+                    self.serverinfo.server.close()
+                except OSError:
+                    pass
+            self.serverinfo.server = None
+        self.client.stop()
 
 
 if __name__ == "__main__":
