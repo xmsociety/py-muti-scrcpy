@@ -141,7 +141,8 @@ class MainWindow(QMainWindow):
     help="Select device manually (device serial required)",
 )
 def main(max_width: int, device: Optional[str]):
-    app = QApplication.instance() or QApplication([])
+    # 持有 QApplication 引用以避免被 GC，否则 Qt 控件会立刻销毁
+    app = QApplication.instance() or QApplication([])  # noqa: F841
     m = MainWindow(max_width, device)
     m.show()
 

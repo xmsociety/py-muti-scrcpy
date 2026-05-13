@@ -43,7 +43,7 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
 
     def http_send(self, img):
         # TODO 在这里实现调用AI服务
-        bimg = imencode(img)
+        bimg = imencode(img)  # noqa: F841
         rst = None
         return rst
 
@@ -115,7 +115,9 @@ class ThreadWorker(threading.Thread):  # 继承父类threading.Thread
                         >= self.time_add_block_list * 10
                     ):
                         self.list_block_frame_time = []
-                    elif now - self.list_block_frame_time[-1] > self.time_add_block_list:
+                    elif (
+                        now - self.list_block_frame_time[-1] > self.time_add_block_list
+                    ):
                         self.list_block_frame_time.append(now)
         except Exception as e:
             if self.stop_flag:

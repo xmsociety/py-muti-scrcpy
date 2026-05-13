@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"启动UDP服务器失败: {e}")
             self.subprocess = None
-            
+
         # bind events
         self.ui.checkbox_devices.clicked.connect(self.on_click_check_all)
         self.ui.button_all_satrt.clicked.connect(self.on_click_all_start)
@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         if not row_data or name not in row_data:
             logger.warning(f"按钮 {name} 在第 {row} 行不存在")
             return
-            
+
         button = row_data[name]
         if status > 0:
             button.setStyleSheet(
@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
             )
         else:
             button.setStyleSheet("")
-            
+
         # 获取按钮文本，支持更灵活的配置
         ui_text = self.dict_ui_text["buttons"]
         button_text = ui_text.get(name, {}).get(status, "未知")
@@ -441,10 +441,10 @@ class MainWindow(QMainWindow):
     def request_worker_operation(self, row, serial_no, operation):
         """请求启动或停止 worker；耗时操作在线程执行，UI 更新回到主线程。"""
         with self._operation_lock:
-            if self._operation_status.get(serial_no) == 'starting':
+            if self._operation_status.get(serial_no) == "starting":
                 logger.warning(f"设备 {serial_no} 正在启动中，请稍候...")
                 return
-            elif self._operation_status.get(serial_no) == 'stopping':
+            elif self._operation_status.get(serial_no) == "stopping":
                 logger.warning(f"设备 {serial_no} 正在停止中，请稍候...")
                 return
             worker_status = self.process_manager.get_worker_status(serial_no)
@@ -469,7 +469,9 @@ class MainWindow(QMainWindow):
     def _run_worker_operation(self, row, serial_no, operation):
         try:
             if operation == "start":
-                success = self.process_manager.start_worker(row, serial_no, self.serverinfo)
+                success = self.process_manager.start_worker(
+                    row, serial_no, self.serverinfo
+                )
                 error_msg = "" if success else "启动进程失败"
             else:
                 success = self.process_manager.stop_worker(serial_no)
@@ -478,7 +480,9 @@ class MainWindow(QMainWindow):
             success = False
             error_msg = str(e)
             logger.error(f"设备 {serial_no} {operation} 失败: {e}")
-        self.signal_worker_operation_finished.emit(serial_no, operation, success, error_msg)
+        self.signal_worker_operation_finished.emit(
+            serial_no, operation, success, error_msg
+        )
 
     def on_worker_operation_finished(self, serial_no, operation, success, error_msg):
         row = self._find_row_by_serial(serial_no)
@@ -517,8 +521,9 @@ class MainWindow(QMainWindow):
             # 在主线程中更新UI
             self.chg_button2table_dict(row, button_name, status)
         except Exception as e:
-            logger.error(f"更新UI状态失败 (row={row}, button={button_name}, status={status}): {e}")
-
+            logger.error(
+                f"更新UI状态失败 (row={row}, button={button_name}, status={status}): {e}"
+            )
 
     def update_table_data(self, data: list, remove_serialno: list = None):
         logger.info(f"数据刷新: {data}\n \t\t{remove_serialno}")
@@ -593,7 +598,7 @@ class MainWindow(QMainWindow):
             if row == -1:
                 continue
             self.chg_button2table_dict(row, "edit", 1)
-    
+
     def _start_process_monitoring(self):
         """启动进程状态监控"""
         try:
@@ -602,35 +607,36 @@ class MainWindow(QMainWindow):
             self._monitor_timer.start(2000)
         except Exception as e:
             logger.error(f"启动进程监控失败: {e}")
-    
+
     def _check_process_status(self):
         """检查进程状态并更新UI"""
         try:
             if self._is_closing:
                 return
-                
+
             # 检查所有worker的状态
             all_status = self.process_manager.get_all_workers_status()
-            
+
             for serial_no, status in all_status.items():
                 # 查找对应的行
                 row = self._find_row_by_serial(serial_no)
                 if row == -1:
                     continue
-                    
-                running = status.get('running', False)
-                alive = status.get('alive', False)
+
+                alive = status.get("alive", False)
                 last_error = status.get("last_error")
                 last_status = status.get("last_status") or {}
                 last_seen = status.get("last_seen")
-                
+
                 # 子进程已退出后，无论 running 标记如何，都要清理 manager 残留记录。
                 if not alive:
                     self._update_button_state_safe(row, "operate", -1)
                     if serial_no in self._operation_status:
                         self._operation_status[serial_no] = None
                     if last_error:
-                        logger.warning(f"检测到设备 {serial_no} 进程异常退出: {last_error}")
+                        logger.warning(
+                            f"检测到设备 {serial_no} 进程异常退出: {last_error}"
+                        )
                         self.update_device_status(
                             serial_no, f"异常: {last_error}", abnormal=True
                         )
@@ -651,17 +657,19 @@ class MainWindow(QMainWindow):
                     fps = last_status.get("fps")
                     frame_count = last_status.get("frame_count")
                     if last_seen and time.time() - last_seen > 10:
-                        self.update_device_status(serial_no, "异常: 心跳超时", abnormal=True)
+                        self.update_device_status(
+                            serial_no, "异常: 心跳超时", abnormal=True
+                        )
                     elif fps is not None and frame_count is not None:
                         self.update_device_status(
                             serial_no, f"运行 FPS {fps:.1f} / {frame_count}帧"
                         )
                     else:
                         self.update_device_status(serial_no, "运行中")
-            
+
         except Exception as e:
             logger.error(f"检查进程状态失败: {e}")
-    
+
     def _find_row_by_serial(self, serial_no):
         """根据设备序列号查找行号"""
         try:
@@ -680,7 +688,7 @@ class MainWindow(QMainWindow):
         # 停止进程监控定时器（必须在主线程做）
         self._device_scan_stop.set()
         try:
-            if hasattr(self, '_monitor_timer') and self._monitor_timer:
+            if hasattr(self, "_monitor_timer") and self._monitor_timer:
                 self._monitor_timer.stop()
         except Exception as e:
             logger.error(f"停止监控定时器失败: {e}")

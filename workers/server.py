@@ -54,7 +54,7 @@ class UDPServer:
                     logger.debug(f"get new img, size: {data_size}")
                     dict_imgs[seriano] = {"len": data_size, "bimg": b""}
                 elif seriano in dict_imgs:
-                    dict_imgs[seriano]["bimg"] += bdata[StructPack.HeadLenth:]
+                    dict_imgs[seriano]["bimg"] += bdata[StructPack.HeadLenth :]
                     if len(dict_imgs[seriano]["bimg"]) == dict_imgs[seriano]["len"]:
                         self.do_some_things(addr, seriano, dict_imgs[seriano]["bimg"])
                         del dict_imgs[seriano]

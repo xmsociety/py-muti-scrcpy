@@ -48,6 +48,9 @@ def test_manager_handles_unknown_serial_gracefully():
     manager = ProcessWorkerManager()
     # 没有任何 worker 时，stop / status 都应安全返回，不抛异常
     assert manager.stop_worker("nonexistent") is True
-    assert manager.get_worker_status("nonexistent") == {"running": False, "alive": False}
+    assert manager.get_worker_status("nonexistent") == {
+        "running": False,
+        "alive": False,
+    }
     assert manager.get_all_workers_status() == {}
     manager.stop_all_workers()  # 不抛

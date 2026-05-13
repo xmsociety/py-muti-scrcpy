@@ -42,9 +42,7 @@ def test_connection():
 
     with pytest.raises(ConnectionError):
         client = Client(
-            device=FakeADBDevice(
-                [[b"\x00", DEVICE_NAME, VIDEO_HEADER], []], wait=1000
-            ),
+            device=FakeADBDevice([[b"\x00", DEVICE_NAME, VIDEO_HEADER], []], wait=1000),
             connection_timeout=1000,
         )
         client.start(threaded=True)
@@ -61,7 +59,9 @@ def test_connection():
 
     # No Device Name Error
     with pytest.raises(ConnectionError) as e:
-        client = Client(device=FakeADBDevice([[b"\x00", EMPTY_DEVICE_NAME, VIDEO_HEADER], []]))
+        client = Client(
+            device=FakeADBDevice([[b"\x00", EMPTY_DEVICE_NAME, VIDEO_HEADER], []])
+        )
         client.start(threaded=True)
         client.stop()
     assert "Device Name" in str(e.value)

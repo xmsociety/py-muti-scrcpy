@@ -81,6 +81,8 @@ if __name__ == "__main__":
     import os
     import time
 
+    import cv2
+
     def test_reqinfo():
         img_path = os.path.join(os.environ.get("HOME"), "Desktop", "nani.jpeg")
         img = cv2.imread(img_path)

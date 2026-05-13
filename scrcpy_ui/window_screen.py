@@ -69,7 +69,11 @@ class ScreenWindow(QDialog):
     def on_mouse_event(self, action=scrcpy.ACTION_DOWN):
         def handler(evt: QMouseEvent):
             client = self.tworker.client
-            if not client.alive or client.control_socket is None or client.resolution is None:
+            if (
+                not client.alive
+                or client.control_socket is None
+                or client.resolution is None
+            ):
                 return
             focused_widget = QApplication.focusWidget()
             if focused_widget is not None:
@@ -111,4 +115,3 @@ class ScreenWindow(QDialog):
         finally:
             if self.signal_screen_close:
                 self.signal_screen_close.emit(self.row, self.serial_no)
-

@@ -1,4 +1,5 @@
 """公共方法"""
+
 import struct
 from typing import Optional
 
@@ -54,4 +55,3 @@ def imdecode(buint8img: bytes) -> Optional[np.ndarray]:
     except Exception as err:
         logger.warning(f"imdecode failed: {err}")
         return None
-

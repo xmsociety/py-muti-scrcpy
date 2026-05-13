@@ -16,7 +16,7 @@ from .schemas import ServerInfo
 
 class ProcessWorker:
     """基于子进程的worker，通过管道与主进程通信"""
-    
+
     def __init__(self, row, serial_no, serverinfo: ServerInfo, signal=None):
         self.row = row
         self.serial_no = serial_no
@@ -45,7 +45,7 @@ class ProcessWorker:
         """
         self.parent_conn, self.child_conn = self._ctx.Pipe()
         self.stop_event = self._ctx.Event()
-    
+
     def start(self):
         """启动子进程"""
         try:
@@ -55,7 +55,7 @@ class ProcessWorker:
             if self.process:
                 self._cleanup_process()
                 self._setup_communication()
-            
+
             self.process = self._ctx.Process(
                 target=self._run_worker_process,
                 args=(
@@ -66,7 +66,7 @@ class ProcessWorker:
                     self.serverinfo,
                 ),
             )
-            
+
             # 启动进程
             self.process.start()
             self.is_running = True
@@ -80,12 +80,12 @@ class ProcessWorker:
 
             logger.info(f"设备 {self.serial_no} 的子进程已启动")
             return True
-            
+
         except Exception as e:
             logger.error(f"启动设备 {self.serial_no} 子进程失败: {e}")
             self._cleanup_process()
             return False
-    
+
     def stop(self):
         """停止子进程"""
         try:
@@ -108,17 +108,17 @@ class ProcessWorker:
                 self.process.join(timeout=1)
                 if self.process.is_alive():
                     self.process.kill()
-            
+
             self.is_running = False
             logger.info(f"设备 {self.serial_no} 的子进程已停止")
             return True
-            
+
         except Exception as e:
             logger.error(f"停止设备 {self.serial_no} 子进程失败: {e}")
             return False
         finally:
             self._cleanup_process()
-    
+
     def _cleanup_process(self):
         """清理进程资源"""
         try:
@@ -132,7 +132,7 @@ class ProcessWorker:
                 self.child_conn = None
         except Exception as e:
             logger.error(f"清理设备 {self.serial_no} 进程资源失败: {e}")
-    
+
     def get_status(self) -> dict:
         """获取进程状态"""
         try:
@@ -144,7 +144,7 @@ class ProcessWorker:
                     "last_seen": self.last_seen,
                     "last_error": self.last_error,
                 }
-            
+
             alive = self.process.is_alive()
             return {
                 "running": self.is_running,
@@ -165,7 +165,7 @@ class ProcessWorker:
                 "last_seen": self.last_seen,
                 "last_error": self.last_error,
             }
-    
+
     @staticmethod
     def _run_worker_process(parent_conn, stop_event, row, serial_no, serverinfo):
         """在子进程中运行的函数"""
@@ -189,7 +189,9 @@ class ProcessWorker:
             if not device:
                 error_msg = f"设备 {serial_no} 未找到"
                 logger.error(error_msg)
-                send_message({"action": "error", "message": error_msg, "serial": serial_no})
+                send_message(
+                    {"action": "error", "message": error_msg, "serial": serial_no}
+                )
                 return
 
             logger.info(f"设备 {serial_no} 连接成功，开始初始化客户端")
@@ -218,7 +220,10 @@ class ProcessWorker:
 
                         # 每5帧或者每2秒发送一次状态信息
                         current_time = time.time()
-                        if frame_count % 5 == 0 or (current_time - last_status_time) > 2:
+                        if (
+                            frame_count % 5 == 0
+                            or (current_time - last_status_time) > 2
+                        ):
                             elapsed = max(current_time - last_status_time, 0.1)
                             delta_frames = frame_count - last_status_frame_count
                             status_msg = {
@@ -236,18 +241,20 @@ class ProcessWorker:
             except Exception as e:
                 error_msg = f"子进程处理视频流失败: {e}"
                 logger.error(error_msg)
-                send_message({"action": "error", "message": str(e), "serial": serial_no})
-            
+                send_message(
+                    {"action": "error", "message": str(e), "serial": serial_no}
+                )
+
             # 发送最终状态
             final_msg = {
-                "action": "stopped", 
+                "action": "stopped",
                 "serial": serial_no,
                 "total_frames": frame_count,
-                "final_timestamp": time.time()
+                "final_timestamp": time.time(),
             }
             send_message(final_msg)
             logger.info(f"设备 {serial_no} 子进程正常结束，总帧数: {frame_count}")
-            
+
         except Exception as e:
             error_msg = f"子进程运行失败: {e}"
             logger.error(error_msg)
@@ -259,7 +266,7 @@ class ProcessWorker:
                     logger.info(f"设备 {serial_no} 客户端已停止")
                 except Exception as e:
                     logger.error(f"停止客户端失败: {e}")
-                    
+
             if server_socket:
                 try:
                     server_socket.close()
@@ -275,13 +282,13 @@ class ProcessWorker:
 
 class ProcessWorkerManager:
     """进程worker管理器，用于统一管理多个进程"""
-    
+
     def __init__(self):
         self.workers = {}
         self._monitoring_thread = None
         self._is_monitoring = False
         self._lock = threading.RLock()
-    
+
     def start_worker(self, row, serial_no, serverinfo, signal=None):
         """启动一个worker"""
         try:
@@ -293,32 +300,34 @@ class ProcessWorkerManager:
                         return False
                     logger.warning(f"设备 {serial_no} 存在残留worker，先清理后重新启动")
                     self.cleanup_worker(serial_no)
-                
+
                 worker = ProcessWorker(row, serial_no, serverinfo, signal)
                 self.workers[serial_no] = worker
                 if not worker.start():
                     self.workers.pop(serial_no, None)
                     return False
-            
+
             # 启动消息监听
             self._start_monitoring()
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"启动设备 {serial_no} worker失败: {e}")
             if serial_no in self.workers:
                 del self.workers[serial_no]
             return False
-    
+
     def _start_monitoring(self):
         """启动消息监听线程"""
         with self._lock:
             if not self._is_monitoring:
                 self._is_monitoring = True
-                self._monitoring_thread = threading.Thread(target=self._monitor_workers, daemon=True)
+                self._monitoring_thread = threading.Thread(
+                    target=self._monitor_workers, daemon=True
+                )
                 self._monitoring_thread.start()
-    
+
     def _monitor_workers(self):
         """监控worker状态并处理消息"""
         while self._is_monitoring:
@@ -343,18 +352,18 @@ class ProcessWorkerManager:
                             f"设备 {serial_no} 子进程已退出，exitcode={status.get('exitcode')}"
                         )
                         worker._death_reported = True
-                
+
                 time.sleep(0.1)  # 避免CPU占用过高
-                
+
             except Exception as e:
                 logger.error(f"监控worker失败: {e}")
                 time.sleep(1)
-    
+
     def _handle_worker_message(self, serial_no, message):
         """处理来自worker的消息"""
         try:
             action = message.get("action")
-            
+
             if action == "frame_info":
                 # 处理帧信息更新
                 frame_count = message.get("frame_count", 0)
@@ -365,8 +374,10 @@ class ProcessWorkerManager:
                     worker.last_status = message
                     worker.last_seen = time.time()
                     worker.last_error = None
-                logger.debug(f"设备 {serial_no} 帧信息: {frame_count} 帧, FPS: {fps:.2f}")
-                
+                logger.debug(
+                    f"设备 {serial_no} 帧信息: {frame_count} 帧, FPS: {fps:.2f}"
+                )
+
             elif action == "error":
                 # 处理错误消息
                 error_msg = message.get("message", "未知错误")
@@ -377,7 +388,7 @@ class ProcessWorkerManager:
                     worker.is_running = False
                     worker.last_error = error_msg
                     worker.last_seen = time.time()
-                
+
             elif action == "stopped":
                 # 处理停止消息
                 total_frames = message.get("total_frames", 0)
@@ -388,13 +399,13 @@ class ProcessWorkerManager:
                     worker.is_running = False
                     worker.last_status = message
                     worker.last_seen = time.time()
-                
+
             else:
                 logger.debug(f"设备 {serial_no} 未知消息类型: {action}")
-                
+
         except Exception as e:
             logger.error(f"处理设备 {serial_no} 消息时出错: {e}")
-    
+
     def stop_monitoring(self):
         """停止消息监控"""
         self._is_monitoring = False
@@ -404,7 +415,7 @@ class ProcessWorkerManager:
             and threading.current_thread() is not self._monitoring_thread
         ):
             self._monitoring_thread.join(timeout=2)
-    
+
     def stop_worker(self, serial_no):
         """停止一个worker"""
         try:
@@ -413,19 +424,19 @@ class ProcessWorkerManager:
             if not worker:
                 logger.warning(f"设备 {serial_no} 的worker不存在")
                 return True
-            
+
             success = worker.stop()
             with self._lock:
                 self.workers.pop(serial_no, None)
-            
+
             # 如果没有活跃的worker，停止监控
             with self._lock:
                 has_workers = bool(self.workers)
             if not has_workers:
                 self.stop_monitoring()
-            
+
             return success
-            
+
         except Exception as e:
             logger.error(f"停止设备 {serial_no} worker失败: {e}")
             return False
@@ -444,22 +455,22 @@ class ProcessWorkerManager:
             has_workers = bool(self.workers)
         if not has_workers:
             self.stop_monitoring()
-    
+
     def get_worker_status(self, serial_no):
         """获取worker状态"""
         with self._lock:
             worker = self.workers.get(serial_no)
         if not worker:
             return {"running": False, "alive": False}
-        
+
         return worker.get_status()
-    
+
     def get_all_workers_status(self):
         """获取所有worker状态"""
         with self._lock:
             workers = list(self.workers.items())
         return {serial: worker.get_status() for serial, worker in workers}
-    
+
     def stop_all_workers(self):
         """并发停止所有 worker。
 
@@ -474,7 +485,10 @@ class ProcessWorkerManager:
 
         threads = [
             threading.Thread(
-                target=self.stop_worker, args=(serial,), daemon=True, name=f"stop-{serial}"
+                target=self.stop_worker,
+                args=(serial,),
+                daemon=True,
+                name=f"stop-{serial}",
             )
             for serial in serials
         ]
@@ -486,12 +500,9 @@ class ProcessWorkerManager:
 
 if __name__ == "__main__":
     # 测试代码
-    from workers.schemas import ServerInfo
-
-    # 创建测试worker
     serverinfo = ServerInfo(host="127.0.0.1", port=9090)
     manager = ProcessWorkerManager()
-    
+
     # 注意：这里需要真实的设备才能测试
     # manager.start_worker(0, "test_device", serverinfo)
     # time.sleep(5)
