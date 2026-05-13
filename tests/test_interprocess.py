@@ -2,10 +2,12 @@
 # -*- coding: UTF-8 -*-
 """测试进程间通信功能"""
 
-import time
 import threading
-from workers.schemas import ServerInfo
+import time
+
 from workers.process_worker import ProcessWorkerManager
+from workers.schemas import ServerInfo
+
 
 def test_interprocess_communication():
     """测试进程间通信"""

@@ -6,7 +6,7 @@ from multiprocessing import get_context
 from adbutils import adb
 from loguru import logger
 from PySide6.QtCore import QTimer, Signal
-from PySide6.QtGui import QColor, QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -20,8 +20,8 @@ from PySide6.QtWidgets import (
 )
 
 from workers import run_udp_server
-from workers.schemas import ServerInfo
 from workers.process_worker import ProcessWorkerManager
+from workers.schemas import ServerInfo
 
 from .schemas import runmode
 from .ui_main import Ui_MainWindow

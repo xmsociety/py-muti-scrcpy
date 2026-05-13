@@ -487,7 +487,7 @@ class ProcessWorkerManager:
 if __name__ == "__main__":
     # 测试代码
     from workers.schemas import ServerInfo
-    
+
     # 创建测试worker
     serverinfo = ServerInfo(host="127.0.0.1", port=9090)
     manager = ProcessWorkerManager()
