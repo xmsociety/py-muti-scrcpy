@@ -1,26 +1,27 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="zh-CN" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Python Scrcpy Client &#8212; Py Mutl Scrcpy  documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Guide" href="guide.html" />
+    <title>Py Muti-Scrcpy 文档 &#8212; Py Muti-Scrcpy  文档</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=ec641305" />
+    <script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="使用指南" href="guide.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -32,36 +33,65 @@
 
           <div class="body" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="python-scrcpy-client">
-<h1>Python Scrcpy Client<a class="headerlink" href="#python-scrcpy-client" title="Permalink to this headline">¶</a></h1>
-<p>Full functional and high performance scrcpy client.</p>
-<section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
-<section id="guide">
-<h3>Guide<a class="headerlink" href="#guide" title="Permalink to this headline">¶</a></h3>
+  <section id="py-muti-scrcpy">
+<h1>Py Muti-Scrcpy 文档<a class="headerlink" href="#py-muti-scrcpy" title="Link to this heading">¶</a></h1>
+<p>Py Muti-Scrcpy 是一个基于 <a class="reference external" href="https://github.com/Genymobile/scrcpy">scrcpy</a> 的 Python 客户端封装。它可以通过 ADB 连接 Android 设备，实时接收设备屏幕的 H.264 视频流，将其解码为 OpenCV/Numpy 可处理的图像帧，并通过控制通道发送触摸、按键、文本、滚动等操作。</p>
+<p>本项目在基础 scrcpy 客户端能力之外，还提供了面向多设备场景的 <code class="docutils literal notranslate"><span class="pre">MultiClient</span></code>（旧名 <code class="docutils literal notranslate"><span class="pre">MutiClient</span></code> 作为别名保留）、PySide6 桌面界面、worker 进程/线程以及 UDP 图像转发示例，适合用来做设备预览、自动化控制、多机管理和后续的图像处理流程。</p>
+<section id="id1">
+<h2>内容<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<section id="id2">
+<h3>使用指南<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="guide.html">Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#adb-connection">ADB connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#bind-events">Bind events</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#send-actions">Send actions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#get-device-information">Get device information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guide.html#reduce-cpu-usage">Reduce CPU usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">使用指南</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id2">安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#adb">ADB 连接</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id3">基础客户端</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id4">绑定事件</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id5">发送控制操作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id6">获取设备信息</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id7">多设备客户端</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id8">桌面界面</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#worker-udp">Worker 与 UDP 转发</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#cpu">降低 CPU 占用</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html#id9">测试与代码检查</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </section>
 <section id="api">
-<h3>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h3>
+<h3>API 参考<a class="headerlink" href="#api" title="Link to this heading">¶</a></h3>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="scrcpy.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="scrcpy.html#module-scrcpy">Module description</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scrcpy.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#module-scrcpy.core">scrcpy.core module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#module-scrcpy.control">scrcpy.control module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#module-scrcpy.const">scrcpy.const module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrcpy.html">API 参考</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scrcpy.html#id1">模块总览</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy.Client"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.Client.add_listener"><code class="docutils literal notranslate"><span class="pre">Client.add_listener()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.Client.remove_listener"><code class="docutils literal notranslate"><span class="pre">Client.remove_listener()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.Client.start"><code class="docutils literal notranslate"><span class="pre">Client.start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.Client.stop"><code class="docutils literal notranslate"><span class="pre">Client.stop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy.MultiClient"><code class="docutils literal notranslate"><span class="pre">MultiClient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy.MutiClient"><code class="docutils literal notranslate"><span class="pre">MutiClient</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scrcpy.html#id2">子模块</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy-core"><code class="docutils literal notranslate"><span class="pre">scrcpy.core</span></code> 模块</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.core.Client"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy-muti-core"><code class="docutils literal notranslate"><span class="pre">scrcpy.muti_core</span></code> 模块</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.muti_core.Client"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy-control"><code class="docutils literal notranslate"><span class="pre">scrcpy.control</span></code> 模块</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.control.ControlSender"><code class="docutils literal notranslate"><span class="pre">ControlSender</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="scrcpy.html#scrcpy.control.inject"><code class="docutils literal notranslate"><span class="pre">inject()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scrcpy.html#scrcpy-const"><code class="docutils literal notranslate"><span class="pre">scrcpy.const</span></code> 模块</a></li>
 </ul>
 </li>
 </ul>
@@ -70,12 +100,12 @@
 </div>
 </section>
 </section>
-<section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<section id="id3">
+<h2>索引<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">索引</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">模块索引</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">搜索页面</span></a></p></li>
 </ul>
 </section>
 </section>
@@ -85,9 +115,9 @@
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">Py Mutl Scrcpy</a></h1>
+<h1 class="logo"><a href="#">Py Muti-Scrcpy</a></h1>
 
 
 
@@ -103,32 +133,31 @@
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="提交" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>导航</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="guide.html">Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">使用指南</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="scrcpy.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrcpy.html">API 参考</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="guide.html" title="next chapter">Guide</a></li>
+      <li>Next: <a href="guide.html" title="下一章">使用指南</a></li>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
 
 
 
@@ -142,7 +171,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Lengyue 2022, IanVzs.
+      &#169;2021, Lengyue 2022, IanVzs.
       
       |
       <a href="_sources/index.md.txt"
@@ -151,7 +180,7 @@
 
     
     <a href="https://github.com/ianvzs/py-muti-scrcpy" class="github">
-        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+        <img src="_static/github-banner.svg" alt="Fork me on GitHub" class="github"/>
     </a>
     
 

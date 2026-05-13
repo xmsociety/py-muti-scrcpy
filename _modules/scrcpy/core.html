@@ -1,24 +1,25 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="zh-CN" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>scrcpy.core &#8212; Py Mutl Scrcpy  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
+    <title>scrcpy.core &#8212; Py Muti-Scrcpy  文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=ec641305" />
+    <script src="../../_static/documentation_options.js?v=7d86a446"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/translations.js?v=beaddf03"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -30,28 +31,36 @@
 
           <div class="body" role="main">
             
-  <h1>Source code for scrcpy.core</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">socket</span>
-<span class="kn">import</span> <span class="nn">struct</span>
-<span class="kn">import</span> <span class="nn">threading</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BufferedIOBase</span><span class="p">,</span> <span class="n">BytesIO</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+  <h1>scrcpy.core 源代码</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">av</span>
-<span class="kn">import</span> <span class="nn">cv2</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">AdbDevice</span><span class="p">,</span> <span class="n">AdbError</span><span class="p">,</span> <span class="n">Network</span><span class="p">,</span> <span class="n">_AdbStreamConnection</span><span class="p">,</span> <span class="n">adb</span>
-<span class="kn">from</span> <span class="nn">av.codec</span> <span class="kn">import</span> <span class="n">CodecContext</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">adbutils</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdbDevice</span><span class="p">,</span> <span class="n">AdbError</span><span class="p">,</span> <span class="n">Network</span><span class="p">,</span> <span class="n">adb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">av.codec</span><span class="w"> </span><span class="kn">import</span> <span class="n">CodecContext</span>
 
-<span class="kn">from</span> <span class="nn">.const</span> <span class="kn">import</span> <span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">EVENT_INIT</span><span class="p">,</span> <span class="n">LOCK_SCREEN_ORIENTATION_UNLOCKED</span>
-<span class="kn">from</span> <span class="nn">.control</span> <span class="kn">import</span> <span class="n">ControlSender</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.const</span><span class="w"> </span><span class="kn">import</span> <span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">EVENT_INIT</span><span class="p">,</span> <span class="n">LOCK_SCREEN_ORIENTATION_UNLOCKED</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.control</span><span class="w"> </span><span class="kn">import</span> <span class="n">ControlSender</span>
+
+<span class="n">SCRCPY_SERVER_VERSION</span> <span class="o">=</span> <span class="s2">&quot;3.3.4&quot;</span>
 
 
-<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Client">
+<a class="viewcode-back" href="../../scrcpy.html#scrcpy.Client">[文档]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Client</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Listener-style scrcpy client.</span>
+
+<span class="sd">    See :class:`scrcpy.muti_core.Client` (a.k.a. ``MutiClient``) for the</span>
+<span class="sd">    generator-style variant used by the worker layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">AdbDevice</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
@@ -63,7 +72,7 @@
         <span class="n">lock_screen_orientation</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">LOCK_SCREEN_ORIENTATION_UNLOCKED</span><span class="p">,</span>
         <span class="n">connection_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3000</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a scrcpy client, this client won&#39;t be started until you call the start function</span>
 
 <span class="sd">        Args:</span>
@@ -79,7 +88,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">device</span> <span class="o">=</span> <span class="n">adb</span><span class="o">.</span><span class="n">device_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">devices</span> <span class="o">=</span> <span class="n">adb</span><span class="o">.</span><span class="n">device_list</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">devices</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;No ADB devices found&quot;</span><span class="p">)</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">device</span> <span class="o">=</span> <span class="n">adb</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">serial</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 
@@ -102,21 +114,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span> <span class="o">=</span> <span class="n">lock_screen_orientation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">=</span> <span class="n">connection_timeout</span>
 
-        <span class="c1"># Need to destroy</span>
+        <span class="c1"># Need to destroy. Single-underscore so subclasses can access them</span>
+        <span class="c1"># without triggering Python&#39;s name mangling.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_AdbStreamConnection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__init_server_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_recv_exact</span><span class="p">(</span><span class="n">sock</span><span class="p">:</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">()</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Socket closed while reading scrcpy metadata&quot;</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_server_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Connect to android server, there will be two sockets, video and control socket.</span>
 <span class="sd">        This method will set: video_socket, control_socket, resolution variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span> <span class="o">//</span> <span class="mi">100</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span>
                     <span class="n">Network</span><span class="o">.</span><span class="n">LOCAL_ABSTRACT</span><span class="p">,</span> <span class="s2">&quot;scrcpy&quot;</span>
                 <span class="p">)</span>
                 <span class="k">break</span>
@@ -124,60 +147,122 @@
                 <span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
                 <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Failed to connect scrcpy-server after 3 seconds&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to connect scrcpy-server after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">1000</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+            <span class="p">)</span>
 
-        <span class="n">dummy_byte</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">dummy_byte</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">dummy_byte</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dummy_byte</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Did not receive Dummy Byte!&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span>
             <span class="n">Network</span><span class="o">.</span><span class="n">LOCAL_ABSTRACT</span><span class="p">,</span> <span class="s2">&quot;scrcpy&quot;</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_recv_exact</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Did not receive Device Name!&quot;</span><span class="p">)</span>
 
-        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;HH&quot;</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># scrcpy v3 sends codec id + video width + video height before raw H.264 data.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span>
+            <span class="s2">&quot;&gt;III&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recv_exact</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__deploy_server</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deploy server to android device</span>
+    <span class="n">_SERVER_REMOTE_PATH</span> <span class="o">=</span> <span class="s2">&quot;/data/local/tmp/scrcpy-server.jar&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remote_jar_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``stat -c %s`` for the remote jar, or ``None`` if missing.</span>
+
+<span class="sd">        Some Android ROMs ship a ``stat`` that doesn&#39;t accept ``-c``; in that</span>
+<span class="sd">        case we fall back to ``wc -c &lt; path`` which is universally available</span>
+<span class="sd">        on busybox / toybox.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;stat -c %s </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_SERVER_REMOTE_PATH</span><span class="si">}</span><span class="s2"> 2&gt;/dev/null&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;wc -c &lt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_SERVER_REMOTE_PATH</span><span class="si">}</span><span class="s2"> 2&gt;/dev/null&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deploy_server</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deploy server to android device. Skips push when the on-device jar is</span>
+<span class="sd">        already the same size as the bundled one — multi-device cold-starts</span>
+<span class="sd">        spend a non-trivial chunk of wall time inside ``adb push`` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">server_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
         <span class="n">server_file_path</span> <span class="o">=</span> <span class="n">server_root</span> <span class="o">+</span> <span class="s2">&quot;/scrcpy-server.jar&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">,</span> <span class="s2">&quot;/data/local/tmp/&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="p">:</span> <span class="n">_AdbStreamConnection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
+        <span class="n">local_size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_jar_size</span><span class="p">()</span> <span class="o">!=</span> <span class="n">local_size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">server_file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SERVER_REMOTE_PATH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="s2">&quot;CLASSPATH=/data/local/tmp/scrcpy-server.jar&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;app_process&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;/&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;com.genymobile.scrcpy.Server&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;1.20&quot;</span><span class="p">,</span>  <span class="c1"># Scrcpy server version</span>
-                <span class="s2">&quot;info&quot;</span><span class="p">,</span>  <span class="c1"># Log level: info, verbose...</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max screen width (long side)</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Bitrate of video</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Max frame per second</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lock_screen_orientation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>  <span class="c1"># Lock screen orientation: LOCK_SCREEN_ORIENTATION</span>
-                <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># Tunnel forward</span>
-                <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Crop screen</span>
-                <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Send frame rate to client</span>
-                <span class="s2">&quot;true&quot;</span><span class="p">,</span>  <span class="c1"># Control enabled</span>
-                <span class="s2">&quot;0&quot;</span><span class="p">,</span>  <span class="c1"># Display id</span>
-                <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Show touches</span>
-                <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Stay awake</span>
-                <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Codec (video encoding) options</span>
-                <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="c1"># Encoder name</span>
-                <span class="s2">&quot;false&quot;</span><span class="p">,</span>  <span class="c1"># Power off screen after server closed</span>
+                <span class="n">SCRCPY_SERVER_VERSION</span><span class="p">,</span>
+                <span class="s2">&quot;log_level=info&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;audio=false&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;video_codec=h264&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;max_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;video_bit_rate=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;max_fps=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;tunnel_forward=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;control=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;display_id=0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;show_touches=false&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;stay_awake=</span><span class="si">{</span><span class="s1">&#39;true&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">stay_awake</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;false&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;power_off_on_close=false&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;clipboard_autosync=false&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;downsize_on_error=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;cleanup=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;power_on=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;send_device_meta=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;send_frame_meta=false&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;send_dummy_byte=true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;send_codec_meta=true&quot;</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Wait for server to start</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Client.start"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threaded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_server_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">conn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span><span class="p">,</span> <span class="s2">&quot;conn&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">old_timeout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="s2">&quot;gettimeout&quot;</span><span class="p">):</span>
+            <span class="n">old_timeout</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">gettimeout</span><span class="p">()</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">old_timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="n">old_timeout</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Client.start">
+<a class="viewcode-back" href="../../scrcpy.html#scrcpy.Client.start">[文档]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threaded</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Start listening video stream</span>
 
 <span class="sd">        Args:</span>
@@ -185,36 +270,67 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="ow">is</span> <span class="kc">False</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">__deploy_server</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__init_server_connection</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deploy_server</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_server_connection</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="k">raise</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__send_to_listeners</span><span class="p">(</span><span class="n">EVENT_INIT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_send_to_listeners</span><span class="p">(</span><span class="n">EVENT_INIT</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">threaded</span><span class="p">:</span>
-            <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__stream_loop</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__stream_loop</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__stream_loop</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Client.stop"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Client.stop">
+<a class="viewcode-back" href="../../scrcpy.html#scrcpy.Client.stop">[文档]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop listening (both threaded and blocked)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__server_stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_server_stream</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">control_socket</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">__stream_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Core loop for video parsing</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_iter_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield decoded frames (or ``None`` placeholders) until the socket</span>
+<span class="sd">        closes. Subclasses can consume this directly to expose generator-style</span>
+<span class="sd">        APIs while keeping codec/socket handling in one place.</span>
+
+<span class="sd">        Raises ``ConnectionError`` when the scrcpy-server pipe goes away and</span>
+<span class="sd">        ``OSError`` for any other socket failure that happens while ``alive``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">codec</span> <span class="o">=</span> <span class="n">CodecContext</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;h264&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
         <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">raw_h264</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mh">0x10000</span><span class="p">)</span>
+                <span class="n">raw_h264</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_video_socket</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mh">0x10000</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">raw_h264</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">server_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_server_output</span><span class="p">()</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Video socket closed; scrcpy-server may have crashed&quot;</span>
+                    <span class="k">if</span> <span class="n">server_output</span><span class="p">:</span>
+                        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">server_output</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
                 <span class="n">packets</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">raw_h264</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">packet</span> <span class="ow">in</span> <span class="n">packets</span><span class="p">:</span>
                     <span class="n">frames</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
@@ -224,17 +340,25 @@
                             <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">last_frame</span> <span class="o">=</span> <span class="n">frame</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">__send_to_listeners</span><span class="p">(</span><span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+                        <span class="k">yield</span> <span class="n">frame</span>
             <span class="k">except</span> <span class="ne">BlockingIOError</span><span class="p">:</span>
                 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_frame</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">__send_to_listeners</span><span class="p">(</span><span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># Socket Closed</span>
+                    <span class="k">yield</span> <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">e</span>
+                <span class="k">return</span>
 
-<div class="viewcode-block" id="Client.add_listener"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.add_listener">[docs]</a>    <span class="k">def</span> <span class="nf">add_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">listener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__stream_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Listener-style adapter: dispatch every frame to ``EVENT_FRAME``.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_frames</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_send_to_listeners</span><span class="p">(</span><span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Client.add_listener">
+<a class="viewcode-back" href="../../scrcpy.html#scrcpy.Client.add_listener">[文档]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">listener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a video listener</span>
 
 <span class="sd">        Args:</span>
@@ -243,8 +367,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">listeners</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">listener</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Client.remove_listener"><a class="viewcode-back" href="../../scrcpy.html#scrcpy.core.Client.remove_listener">[docs]</a>    <span class="k">def</span> <span class="nf">remove_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">listener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Client.remove_listener">
+<a class="viewcode-back" href="../../scrcpy.html#scrcpy.Client.remove_listener">[文档]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">listener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a video listener</span>
 
 <span class="sd">        Args:</span>
@@ -253,8 +380,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">listeners</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">listener</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__send_to_listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_send_to_listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send event to listeners</span>
 
 <span class="sd">        Args:</span>
@@ -264,15 +392,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">fun</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listeners</span><span class="p">[</span><span class="bp">cls</span><span class="p">]:</span>
             <span class="n">fun</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
 </pre></div>
 
           </div>
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">Py Mutl Scrcpy</a></h1>
+<h1 class="logo"><a href="../../index.html">Py Muti-Scrcpy</a></h1>
 
 
 
@@ -288,33 +417,32 @@
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="提交" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>导航</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../guide.html">Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">使用指南</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../scrcpy.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scrcpy.html">API 参考</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../index.html">模块代码</a><ul>
   </ul></li>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
 
 
 
@@ -328,13 +456,13 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Lengyue 2022, IanVzs.
+      &#169;2021, Lengyue 2022, IanVzs.
       
     </div>
 
     
     <a href="https://github.com/ianvzs/py-muti-scrcpy" class="github">
-        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+        <img src="../../_static/github-banner.svg" alt="Fork me on GitHub" class="github"/>
     </a>
     
 

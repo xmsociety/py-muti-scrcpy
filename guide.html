@@ -1,27 +1,28 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="zh-CN" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Guide &#8212; Py Mutl Scrcpy  documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="scrcpy.html" />
-    <link rel="prev" title="Python Scrcpy Client" href="index.html" />
+    <title>使用指南 &#8212; Py Muti-Scrcpy  文档</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=ec641305" />
+    <script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="API 参考" href="scrcpy.html" />
+    <link rel="prev" title="Py Muti-Scrcpy 文档" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -33,90 +34,194 @@
 
           <div class="body" role="main">
             
-  <section class="tex2jax_ignore mathjax_ignore" id="guide">
-<h1>Guide<a class="headerlink" href="#guide" title="Permalink to this headline">¶</a></h1>
-<p>In this article, you will learn to use this project in 10 minutes.</p>
-<section id="adb-connection">
-<h2>ADB connection<a class="headerlink" href="#adb-connection" title="Permalink to this headline">¶</a></h2>
-<p>Since this project depends on <a class="reference external" href="https://github.com/openatx/adbutils">adbutils</a>,
-user don’t have to download adb manually on windows and macos.<br />
-However, <strong>linux users still need to install adb manually</strong>.</p>
-<ul class="simple">
-<li><p>Debian user can use <code class="docutils literal notranslate"><span class="pre">apt</span> <span class="pre">install</span> <span class="pre">adb</span></code> to install ADB.</p></li>
-</ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scrcpy</span>
-<span class="c1"># If you already know the device serial</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;DEVICE SERIAL&quot;</span><span class="p">)</span>
-<span class="c1"># You can also pass an ADBClient instance to it</span>
-<span class="kn">from</span> <span class="nn">adbutils</span> <span class="kn">import</span> <span class="n">adb</span>
+  <section id="id1">
+<h1>使用指南<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h1>
+<p>这篇文档介绍如何在几分钟内运行 Py Muti-Scrcpy，并说明它作为 Python 库、桌面界面和多设备处理示例时分别如何使用。</p>
+<section id="id2">
+<h2>安装<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<p>基础库依赖 <code class="docutils literal notranslate"><span class="pre">adbutils</span></code>、<code class="docutils literal notranslate"><span class="pre">av</span></code> 和 <code class="docutils literal notranslate"><span class="pre">opencv-python</span></code>，可以直接安装：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>muti-scrcpy-client
+</pre></div>
+</div>
+<p>如果需要启动自带的 PySide6 桌面界面，请安装 <code class="docutils literal notranslate"><span class="pre">ui</span></code> 可选依赖：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;muti-scrcpy-client[ui]&quot;</span>
+</pre></div>
+</div>
+<p>项目支持的 Python 版本范围由 <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> 定义：<code class="docutils literal notranslate"><span class="pre">&gt;=3.10,</span> <span class="pre">&lt;3.15</span></code>。</p>
+</section>
+<section id="adb">
+<h2>ADB 连接<a class="headerlink" href="#adb" title="Link to this heading">¶</a></h2>
+<p>项目使用 <a class="reference external" href="https://github.com/openatx/adbutils">adbutils</a> 管理 ADB 连接。Windows 和 macOS 通常可以直接通过 <code class="docutils literal notranslate"><span class="pre">adbutils</span></code> 使用 ADB；Linux 用户一般仍需要先安装系统 ADB，例如 Debian/Ubuntu 可以执行：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>adb
+</pre></div>
+</div>
+<p>知道设备序列号时，可以直接创建客户端：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scrcpy</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;DEVICE_SERIAL&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>也可以先使用 <code class="docutils literal notranslate"><span class="pre">adbutils</span></code> 获取或连接设备，再把设备对象传给客户端：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scrcpy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">adbutils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adb</span>
+
 <span class="n">adb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;127.0.0.1:5555&quot;</span><span class="p">)</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">adb</span><span class="o">.</span><span class="n">devices</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>For more information, you should go to <a class="reference external" href="https://github.com/openatx/adbutils">adbutils’s webpage</a>.</p>
+<p>如果没有传入 <code class="docutils literal notranslate"><span class="pre">device</span></code>，<code class="docutils literal notranslate"><span class="pre">Client</span></code> 会默认使用 ADB 设备列表中的第一个设备。</p>
 </section>
-<section id="bind-events">
-<h2>Bind events<a class="headerlink" href="#bind-events" title="Permalink to this headline">¶</a></h2>
-<p>This project’s core follow event sender and receiver structure.
-This means you can add multiple listener to the same stream.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span>
+<section id="id3">
+<h2>基础客户端<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">scrcpy.Client</span></code> 会把内置的 <code class="docutils literal notranslate"><span class="pre">scrcpy-server.jar</span></code> 推送到 Android 设备，建立视频 socket 和控制 socket。视频流会被解码成 BGR 格式的 <code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>，因此可以直接交给 OpenCV 处理。</p>
+<p>常用初始化参数包括：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_width</span></code>：限制服务端输出画面的最长边，<code class="docutils literal notranslate"><span class="pre">0</span></code> 表示不限制。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bitrate</span></code>：视频码率，默认 <code class="docutils literal notranslate"><span class="pre">8000000</span></code>。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_fps</span></code>：最大帧率，<code class="docutils literal notranslate"><span class="pre">0</span></code> 表示不限制；Android 10 之后支持更好。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flip</span></code>：是否水平翻转画面。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block_frame</span></code>：是否只发送非空帧；默认非阻塞时可能收到 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stay_awake</span></code>：连接期间保持设备唤醒。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lock_screen_orientation</span></code>：锁定屏幕方向，可使用 <code class="docutils literal notranslate"><span class="pre">scrcpy.LOCK_SCREEN_ORIENTATION_*</span></code> 常量。</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2>绑定事件<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
+<p>基础 <code class="docutils literal notranslate"><span class="pre">Client</span></code> 使用事件监听方式分发状态和画面。你可以给同一个事件添加多个监听器。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scrcpy</span>
 
-<span class="k">def</span> <span class="nf">on_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="c1"># If you set non-blocking (default) in constructor, the frame event receiver </span>
-    <span class="c1"># may receive None to avoid blocking event.</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;DEVICE_SERIAL&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">on_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+    <span class="c1"># 默认非阻塞模式下，暂时没有新画面时可能收到 None。</span>
     <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># frame is an bgr numpy ndarray (cv2&#39; default format)</span>
-        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;viz&quot;</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+        <span class="c1"># frame 是 BGR 格式的 numpy.ndarray，符合 OpenCV 默认格式。</span>
+        <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
     <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
+
 <span class="n">client</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">scrcpy</span><span class="o">.</span><span class="n">EVENT_FRAME</span><span class="p">,</span> <span class="n">on_frame</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>[Optional] You can also add a listener to listen the <code class="docutils literal notranslate"><span class="pre">init</span></code> event.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">on_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="c1"># Print device name</span>
-    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
+<p>也可以监听初始化事件，读取设备名称、分辨率等信息：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">on_init</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">device_name</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+
+
 <span class="n">client</span><span class="o">.</span><span class="n">add_listener</span><span class="p">(</span><span class="n">scrcpy</span><span class="o">.</span><span class="n">EVENT_INIT</span><span class="p">,</span> <span class="n">on_init</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Then, you can start the client</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>[Optional] you can start the client with <code class="docutils literal notranslate"><span class="pre">threaded=True</span></code>, then the frame loop will be executed in a new thread,
-and the main thread won’t be blocked.</p>
+<p>如果不希望视频循环阻塞主线程，可以使用线程模式启动：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">threaded</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="send-actions">
-<h2>Send actions<a class="headerlink" href="#send-actions" title="Permalink to this headline">¶</a></h2>
-<p>You can find all actions in the <code class="docutils literal notranslate"><span class="pre">API:scrcpy.control</span></code> submodule.</p>
-<p>The core will create a control instance to itself automatically.<br />
-For example, you can send a touch event by</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mousedown</span>
-<span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">)</span>
-<span class="c1"># Mouseup</span>
-<span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">ACTION_UP</span><span class="p">)</span>
+<p>需要停止连接时调用：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
-<section id="get-device-information">
-<h2>Get device information<a class="headerlink" href="#get-device-information" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Resolution</span>
+<section id="id5">
+<h2>发送控制操作<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
+<p>客户端会自动创建 <code class="docutils literal notranslate"><span class="pre">client.control</span></code>。它通过 scrcpy 控制通道向设备发送操作，常见能力包括按键、文本、触摸、滑动、滚动、剪贴板、展开/收起面板、旋转设备和控制屏幕电源状态。</p>
+<p>触摸示例：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">ACTION_UP</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>滑动示例：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">swipe</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>输入文本和按键示例：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">keycode</span><span class="p">(</span><span class="n">scrcpy</span><span class="o">.</span><span class="n">KEYCODE_HOME</span><span class="p">,</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">ACTION_DOWN</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">control</span><span class="o">.</span><span class="n">keycode</span><span class="p">(</span><span class="n">scrcpy</span><span class="o">.</span><span class="n">KEYCODE_HOME</span><span class="p">,</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">ACTION_UP</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h2>获取设备信息<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
+<p>连接建立后可以读取以下属性：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 当前分辨率，格式为 (width, height)</span>
 <span class="n">client</span><span class="o">.</span><span class="n">resolution</span>
-<span class="c1"># Screenshot / Last frame</span>
+
+<span class="c1"># 最近一帧画面，类型为 numpy.ndarray 或 None</span>
 <span class="n">client</span><span class="o">.</span><span class="n">last_frame</span>
-<span class="c1"># Device Name</span>
+
+<span class="c1"># 设备名称</span>
 <span class="n">client</span><span class="o">.</span><span class="n">device_name</span>
 </pre></div>
 </div>
 </section>
-<section id="reduce-cpu-usage">
-<h2>Reduce CPU usage<a class="headerlink" href="#reduce-cpu-usage" title="Permalink to this headline">¶</a></h2>
-<p>You can use <code class="docutils literal notranslate"><span class="pre">max_width</span></code>, <code class="docutils literal notranslate"><span class="pre">bitrate</span></code>, and <code class="docutils literal notranslate"><span class="pre">max_fps</span></code> parameter to limit the bitrate of the video stream.<br />
-After reducing the bitrate of video stream, the H264 decoder can save much CPU resources.<br />
-This is very helpful when you don’t need a 10 ms level experience. (You probably only need 5 fps in most automation).</p>
+<section id="id7">
+<h2>多设备客户端<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">scrcpy.MultiClient</span></code> 是面向逐帧消费场景的客户端。它与基础 <code class="docutils literal notranslate"><span class="pre">Client</span></code> 使用同一套 scrcpy 服务端和控制能力，但 <code class="docutils literal notranslate"><span class="pre">start()</span></code> 返回一个生成器，适合在 worker 中循环拉取帧。</p>
+<blockquote>
+<div><p>由于 PyPI 包名 <code class="docutils literal notranslate"><span class="pre">muti-scrcpy-client</span></code> 是历史遗留拼写，该类的旧名 <code class="docutils literal notranslate"><span class="pre">MutiClient</span></code> 仍作为别名保留；新代码请用 <code class="docutils literal notranslate"><span class="pre">MultiClient</span></code>。</p>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scrcpy</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">MultiClient</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;DEVICE_SERIAL&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">client</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="c1"># 在这里处理每一帧图像。</span>
+</pre></div>
+</div>
+<p>需要注意：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Client.start(threaded=True)</span></code> 是基础客户端的事件循环用法。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MultiClient.start()</span></code> 是生成器用法，不接收 <code class="docutils literal notranslate"><span class="pre">threaded</span></code> 参数。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MultiClient</span></code> 默认码率为 <code class="docutils literal notranslate"><span class="pre">16000000</span></code>，适合更高画质的逐帧处理。</p></li>
+</ul>
+</section>
+<section id="id8">
+<h2>桌面界面<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
+<p>安装 <code class="docutils literal notranslate"><span class="pre">ui</span></code> 可选依赖后，可以运行入口命令：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>py-muti-scrcpy
+</pre></div>
+</div>
+<p>桌面界面位于 <code class="docutils literal notranslate"><span class="pre">scrcpy_ui</span></code> 包中，主要功能包括：</p>
+<ul class="simple">
+<li><p>枚举 ADB 设备并在主窗口中显示。</p></li>
+<li><p>勾选一个或多个设备后批量启动或停止。</p></li>
+<li><p>打开单设备画面窗口，实时预览设备屏幕。</p></li>
+<li><p>配合 worker 进程/线程处理多路视频流。</p></li>
+<li><p>启动本地 UDP 服务进程，为后续图像处理或远程服务对接提供示例。</p></li>
+</ul>
+<p>如果只把本项目作为 Python 库使用，可以不安装 PySide6，也不需要启动桌面界面。</p>
+</section>
+<section id="worker-udp">
+<h2>Worker 与 UDP 转发<a class="headerlink" href="#worker-udp" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">workers</span></code> 包提供了多设备处理时的辅助组件：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ThreadWorker</span></code>：线程版 worker，适合在 Qt 单设备窗口中把帧通过信号送回界面，也可以把图像按 UDP 分片发送到服务端。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ProcessWorker</span></code> 和 <code class="docutils literal notranslate"><span class="pre">ProcessWorkerManager</span></code>：进程版 worker，用于在主界面中管理多设备连接，降低多路视频处理对 UI 线程的影响。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UDPServer</span></code>：本地 UDP 服务端示例，按自定义包头接收图像分片，解码后返回处理结果结构。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schemas</span></code> 和 <code class="docutils literal notranslate"><span class="pre">utils</span></code>：定义分包结构、服务端响应结构，以及图像编码/解码工具。</p></li>
+</ul>
+<p>这部分代码更偏向多设备和图像处理流程示例。如果只是控制单台设备，通常直接使用 <code class="docutils literal notranslate"><span class="pre">scrcpy.Client</span></code> 即可。</p>
+</section>
+<section id="cpu">
+<h2>降低 CPU 占用<a class="headerlink" href="#cpu" title="Link to this heading">¶</a></h2>
+<p>视频解码是主要的 CPU 消耗来源。自动化脚本通常不需要极高帧率，可以通过以下参数降低压力：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span> <span class="o">=</span> <span class="n">scrcpy</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span>
+    <span class="n">max_width</span><span class="o">=</span><span class="mi">720</span><span class="p">,</span>
+    <span class="n">bitrate</span><span class="o">=</span><span class="mi">2_000_000</span><span class="p">,</span>
+    <span class="n">max_fps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>降低分辨率、码率和帧率后，H.264 解码负载会明显下降，更适合长时间运行的自动化任务。</p>
+</section>
+<section id="id9">
+<h2>测试与代码检查<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<p>仓库中的 <code class="docutils literal notranslate"><span class="pre">tests</span></code> 目录包含 core、control 和进程间通信相关测试。开发时可以结合 <code class="docutils literal notranslate"><span class="pre">pytest</span></code> 运行测试，并使用 <code class="docutils literal notranslate"><span class="pre">scripts/check.py</span></code> 或 <code class="docutils literal notranslate"><span class="pre">scripts/lint.py</span></code> 做格式和静态检查。</p>
 </section>
 </section>
 
@@ -125,9 +230,9 @@ This is very helpful when you don’t need a 10 ms level experience. (You probab
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Py Mutl Scrcpy</a></h1>
+<h1 class="logo"><a href="index.html">Py Muti-Scrcpy</a></h1>
 
 
 
@@ -143,40 +248,45 @@ This is very helpful when you don’t need a 10 ms level experience. (You probab
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="提交" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>导航</h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#adb-connection">ADB connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bind-events">Bind events</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#send-actions">Send actions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#get-device-information">Get device information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reduce-cpu-usage">Reduce CPU usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">使用指南</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adb">ADB 连接</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">基础客户端</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">绑定事件</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">发送控制操作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">获取设备信息</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">多设备客户端</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">桌面界面</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#worker-udp">Worker 与 UDP 转发</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cpu">降低 CPU 占用</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">测试与代码检查</a></li>
 </ul>
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="scrcpy.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scrcpy.html">API 参考</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Python Scrcpy Client</a></li>
-      <li>Next: <a href="scrcpy.html" title="next chapter">API</a></li>
+      <li>Previous: <a href="index.html" title="上一章">Py Muti-Scrcpy 文档</a></li>
+      <li>Next: <a href="scrcpy.html" title="下一章">API 参考</a></li>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
 
 
 
@@ -190,7 +300,7 @@ This is very helpful when you don’t need a 10 ms level experience. (You probab
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Lengyue 2022, IanVzs.
+      &#169;2021, Lengyue 2022, IanVzs.
       
       |
       <a href="_sources/guide.md.txt"
@@ -199,7 +309,7 @@ This is very helpful when you don’t need a 10 ms level experience. (You probab
 
     
     <a href="https://github.com/ianvzs/py-muti-scrcpy" class="github">
-        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+        <img src="_static/github-banner.svg" alt="Fork me on GitHub" class="github"/>
     </a>
     
 
