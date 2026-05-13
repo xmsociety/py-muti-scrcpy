@@ -1,5 +1,5 @@
 # 项目常用开发命令。
-.PHONY: help code_check format build dist run ui
+.PHONY: help code_check format hooks build dist run ui
 
 # 放在最前面，让不带参数的 "make" 等同于 "make help"。
 help: ## 显示可用 make 命令及说明
@@ -15,6 +15,10 @@ format: ## 自动格式化代码，并在格式化后运行 flake8
 	isort scrcpy tests scripts scrcpy_ui workers
 	black scrcpy tests scripts scrcpy_ui workers
 	flake8 --ignore W503,E203,E501,E731,F403,F401 scrcpy tests scripts scrcpy_ui workers --exclude scrcpy_ui/ui_main.py,scrcpy_ui/ui_single.py,scrcpy_ui/ui_screen.py,scrcpy_ui/ui_config_edit.py
+hooks: ## 安装/更新 git pre-commit 钩子（提交前自动跑 isort/black/flake8）
+	pre-commit install
+	pre-commit autoupdate
+
 build: ## 安装当前项目（含 UI 和开发依赖）到当前 Python 环境
 	python -m pip install --upgrade pip
 	python -m pip install -e ".[ui,dev]"
@@ -23,7 +27,7 @@ dist: ## 构建可发布的 sdist + wheel 到 dist/
 	python -m pip install --upgrade build
 	python -m build
 run: ## 运行本地测试脚本；也可按需切换为桌面入口
-	python test.py 
+	python test.py
 	# py-muti-scrcpy
 
 ui: ## 将 scrcpy_ui 下的 .ui 文件编译为 Python 文件

@@ -1,0 +1,45 @@
+# Copyright (c) 2026 IanVzs. All rights reserved.
+#
+# 提交前自动跑 isort / black / flake8，与 `make code_check`、CI 的 scripts/check.py 保持一致。
+# 一次性安装：
+#   pip install -e ".[ui,dev]"   # 已含 pre-commit
+#   make hooks                    # 等价于 pre-commit install
+# 想对全仓库手动跑一次：
+#   pre-commit run --all-files
+
+minimum_pre_commit_version: "3.0.0"
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+
+  # isort 配置读自 pyproject.toml [tool.isort]，保持 profile=black。
+  - repo: https://github.com/pycqa/isort
+    rev: 6.1.0
+    hooks:
+      - id: isort
+        files: ^(scrcpy|tests|scripts|scrcpy_ui|workers)/.*\.py$
+
+  - repo: https://github.com/psf/black
+    rev: 25.12.0
+    hooks:
+      - id: black
+        files: ^(scrcpy|tests|scripts|scrcpy_ui|workers)/.*\.py$
+
+  # flake8 参数与 Makefile/scripts/check.py 完全一致。
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        args:
+          - --ignore=W503,E203,E501,E731,F403,F401
+        files: ^(scrcpy|tests|scripts|scrcpy_ui|workers)/.*\.py$
+        exclude: ^scrcpy_ui/(ui_main|ui_single|ui_screen|ui_config_edit)\.py$
