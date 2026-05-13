@@ -190,11 +190,9 @@ class MainWindow(QMainWindow):
 
         button = row_data[name]
         if status > 0:
-            button.setStyleSheet(
-                """ text-align : center;
+            button.setStyleSheet(""" text-align : center;
                     background-color : LightCoral;
-                    """
-            )
+                    """)
         else:
             button.setStyleSheet("")
 
